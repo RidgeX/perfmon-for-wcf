@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CalculatorClient
@@ -32,6 +33,17 @@ namespace CalculatorClient
             value2 = 7.0;
             result = client.Divide(value1, value2);
             Console.WriteLine("Divide({0},{1}) = {2}", value1, value2, result);
+
+            Random random = new Random();
+
+            for (int i = 0; i < 100; i++)
+            {
+                value1 = random.NextDouble() * 100.0;
+                value2 = random.NextDouble() * 100.0;
+                result = client.Add(value1, value2);
+                Console.WriteLine("Add({0},{1}) = {2}", value1, value2, result);
+                Thread.Sleep(150);
+            }
 
             client.Close();
 
