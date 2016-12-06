@@ -11,11 +11,13 @@ namespace CalculatorServiceLibrary
 {
     public class CalculatorService : ICalculatorService
     {
+        private static long angle;
         private static PerformanceCounter counter;
         private static Random random;
 
         static CalculatorService()
         {
+            angle = 0;
             if (!PerformanceCounterCategory.Exists("Test category"))
             {
                 PerformanceCounterCategory.Create("Test category", "Description",
@@ -33,7 +35,8 @@ namespace CalculatorServiceLibrary
             double result = n1 + n2;
             Console.WriteLine("Received Add({0},{1})", n1, n2);
             Console.WriteLine("Return: {0}", result);
-            counter.IncrementBy(5);
+            counter.RawValue = (long)(30.0 * Math.Sin(angle * Math.PI / 180.0) + 50.0);
+            angle = (angle + 3) % 360;
             Thread.Sleep(random.Next(100));
             return result;
         }
