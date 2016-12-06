@@ -13,6 +13,10 @@ namespace CalculatorClient
     {
         public static void Main(string[] args)
         {
+            Console.WriteLine("Press <ENTER> to start client.");
+            Console.WriteLine();
+            Console.ReadLine();
+
             CalculatorServiceClient client = new CalculatorServiceClient();
 
             double value1 = 100.0;
@@ -37,12 +41,17 @@ namespace CalculatorClient
 
             PerformanceCounter counter = new PerformanceCounter("Test category", "Test counter");
             Random random = new Random();
+            bool running = true;
 
-            for (int i = 0; i < 200; i++)
+            while (running)
             {
                 value1 = random.NextDouble() * 100.0;
                 value2 = random.NextDouble() * 100.0;
-                client.Add(value1, value2);
+                Parallel.Invoke(
+                    () => client.Add(value1, value2),
+                    () => client.Add(value1, value2),
+                    () => client.Add(value1, value2)
+                );
                 Console.WriteLine("Test: {0}", counter.NextValue());
             }
 
