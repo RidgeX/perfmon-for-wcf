@@ -1,6 +1,7 @@
 ﻿using CalculatorClient.CalculatorService;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -34,15 +35,15 @@ namespace CalculatorClient
             result = client.Divide(value1, value2);
             Console.WriteLine("Divide({0},{1}) = {2}", value1, value2, result);
 
+            PerformanceCounter counter = new PerformanceCounter("Test category", "Test counter");
             Random random = new Random();
 
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 200; i++)
             {
                 value1 = random.NextDouble() * 100.0;
                 value2 = random.NextDouble() * 100.0;
-                result = client.Add(value1, value2);
-                Console.WriteLine("Add({0},{1}) = {2}", value1, value2, result);
-                Thread.Sleep(150);
+                client.Add(value1, value2);
+                Console.WriteLine("Test: {0}", counter.NextValue());
             }
 
             client.Close();
