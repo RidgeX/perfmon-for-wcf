@@ -3,6 +3,7 @@ using LiveCharts.Configurations;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -50,7 +51,7 @@ namespace Perfmon
         }
         public DispatcherTimer Timer { get; set; }
         public bool IsDataInjectionRunning { get; set; }
-        public Random R { get; set; }
+        public PerformanceCounter Counter { get; set; }
 
         public MainWindow()
         {
@@ -72,7 +73,9 @@ namespace Perfmon
             };
             Timer.Tick += Timer_Tick;
             IsDataInjectionRunning = false;
-            R = new Random();
+
+            Counter = new PerformanceCounter("ServiceModelOperation 4.0.0.0", "Calls", "Calcu50.ICalculatorService.Add@HTTP:||LOCALHOST:8000|CALCULATOR|");
+            //Counter = new PerformanceCounter("Test category", "Test counter");
 
             DataContext = this;
         }
@@ -114,7 +117,7 @@ namespace Perfmon
             ChartValues.Add(new MeasureModel()
             {
                 DateTime = now,
-                Value = R.Next(0, 10)
+                Value = Counter.NextValue()
             });
             SetAxisLimits(now);
 
