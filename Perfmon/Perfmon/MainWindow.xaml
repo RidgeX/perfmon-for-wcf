@@ -16,9 +16,9 @@
             <ColumnDefinition Width="4*" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <Button x:Name="runData" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
-                Height="30" Click="runData_Click">
-            Start/Stop Monitoring
+        <Button x:Name="captureData" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                Click="captureData_Click" Height="30">
+            Start Monitoring
         </Button>
         <lvc:CartesianChart Grid.Row="1" Grid.Column="0"
                             LegendLocation="Right" Series="{Binding SeriesCollection}">

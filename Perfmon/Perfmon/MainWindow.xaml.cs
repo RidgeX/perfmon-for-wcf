@@ -51,7 +51,6 @@ namespace Perfmon
             }
         }
         public DispatcherTimer Timer { get; set; }
-        public bool IsDataInjectionRunning { get; set; }
         public List<PerformanceCounter> Counters { get; set; }
 
         public MainWindow()
@@ -73,7 +72,6 @@ namespace Perfmon
                 Interval = TimeSpan.FromMilliseconds(300)
             };
             Timer.Tick += Timer_Tick;
-            IsDataInjectionRunning = false;
 
             Counters = new List<PerformanceCounter>();
             //Counters.Add(new PerformanceCounter("ServiceModelOperation 4.0.0.0", "Calls", "Calcu50.ICalculatorService.Add@HTTP:||LOCALHOST:8000|CALCULATOR|"));
@@ -107,17 +105,17 @@ namespace Perfmon
             }
         }
 
-        private void runData_Click(object sender, RoutedEventArgs e)
+        private void captureData_Click(object sender, RoutedEventArgs e)
         {
-            if (IsDataInjectionRunning)
+            if (!Timer.IsEnabled)
             {
-                Timer.Stop();
-                IsDataInjectionRunning = false;
+                Timer.Start();
+                captureData.Content = "Stop Monitoring";
             }
             else
             {
-                Timer.Start();
-                IsDataInjectionRunning = true;
+                Timer.Stop();
+                captureData.Content = "Start Monitoring";
             }
         }
 
