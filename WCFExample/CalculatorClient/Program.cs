@@ -11,8 +11,49 @@ namespace CalculatorClient
 {
     public class Program
     {
+        private static void ListCounters(string categoryName)
+        {
+            PerformanceCounterCategory category = PerformanceCounterCategory.GetCategories().First(c => c.CategoryName == categoryName);
+            Console.WriteLine("{0} [{1}]", category.CategoryName, category.CategoryType);
+
+            string[] instanceNames = category.GetInstanceNames();
+            Array.Sort(instanceNames);
+
+            if (instanceNames.Any())
+            {
+                foreach (string instanceName in instanceNames)
+                {
+                    if (category.InstanceExists(instanceName))
+                    {
+                        ListInstances(category, instanceName);
+                    }
+                }
+            }
+            else
+            {
+                ListInstances(category, string.Empty);
+            }
+        }
+
+        private static void ListInstances(PerformanceCounterCategory category, string instanceName)
+        {
+            Console.WriteLine("    {0}", string.IsNullOrEmpty(instanceName) ? "*" : instanceName);
+
+            PerformanceCounter[] counters = category.GetCounters(instanceName);
+            foreach (PerformanceCounter counter in counters)
+            {
+                Console.WriteLine("        {0}", counter.CounterName);
+            }
+        }
+
         public static void Main(string[] args)
         {
+            /*
+            ListCounters("ServiceModelEndpoint 4.0.0.0");
+            ListCounters("ServiceModelOperation 4.0.0.0");
+            ListCounters("ServiceModelService 4.0.0.0");
+            */
+
             Console.WriteLine("Press <ENTER> to start client.");
             Console.WriteLine();
             Console.ReadLine();
