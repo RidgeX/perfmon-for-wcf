@@ -34,15 +34,21 @@
                 <lvc:Axis MinValue="0" />
             </lvc:CartesianChart.AxisY>
         </lvc:CartesianChart>
-        <TreeView Grid.Row="1" Grid.Column="1">
-            <TreeViewItem Header="Test category">
-                <TreeViewItem Header="*">
+        <TreeView Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Categories}">
+            <TreeView.Resources>
+                <HierarchicalDataTemplate DataType="{x:Type local:CategoryItem}" ItemsSource="{Binding Instances}">
+                    <TextBlock Text="{Binding Name}" />
+                </HierarchicalDataTemplate>
+                <HierarchicalDataTemplate DataType="{x:Type local:InstanceItem}" ItemsSource="{Binding Counters}">
+                    <TextBlock Text="{Binding Name}" />
+                </HierarchicalDataTemplate>
+                <DataTemplate DataType="{x:Type local:CounterItem}">
                     <StackPanel Orientation="Horizontal">
-                        <CheckBox Margin="0,0,3,0" />
-                        <TextBlock Text="Test counter" />
+                        <CheckBox IsChecked="{Binding IsChecked}" Margin="0,0,3,0" />
+                        <TextBlock Text="{Binding Name}" />
                     </StackPanel>
-                </TreeViewItem>
-            </TreeViewItem>
+                </DataTemplate>
+            </TreeView.Resources>
         </TreeView>
     </Grid>
 </Window>
