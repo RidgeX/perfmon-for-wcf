@@ -1,11 +1,13 @@
 ﻿using LiveCharts;
 using LiveCharts.Configurations;
 using LiveCharts.Wpf;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,9 +21,36 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.Xml.Serialization;
 
 namespace Perfmon
 {
+    public class CounterPath
+    {
+        public string CategoryName { get; set; }
+        public string InstanceName { get; set; }
+        public string CounterName { get; set; }
+
+        public CounterPath() { }
+
+        public CounterPath(PerformanceCounter counter)
+        {
+            CategoryName = counter.CategoryName;
+            InstanceName = string.IsNullOrEmpty(counter.InstanceName) ? "*" : counter.InstanceName;
+            CounterName = counter.CounterName;
+        }
+    }
+
+    public class Settings
+    {
+        public List<CounterPath> CounterPaths { get; set; }
+
+        public Settings()
+        {
+            CounterPaths = new List<CounterPath>();
+        }
+    }
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -186,6 +215,67 @@ namespace Perfmon
             {
                 Timer.Stop();
                 captureData.Content = "Start Monitoring";
+            }
+        }
+
+        private void SaveSettings_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Settings file|*.xml";
+            saveFileDialog.Title = "Save settings";
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                var fs = (FileStream) saveFileDialog.OpenFile();
+                var settings = new Settings();
+
+                foreach (CategoryItem category in Categories)
+                {
+                    foreach (InstanceItem instance in category.Instances)
+                    {
+                        foreach (CounterItem counter in instance.Counters)
+                        {
+                            if (counter.IsChecked == true)
+                            {
+                                settings.CounterPaths.Add(new CounterPath(counter.Counter));
+                            }
+                        }
+                    }
+                }
+
+                var serial = new XmlSerializer(typeof(Settings));
+                serial.Serialize(fs, settings);
+
+                fs.Close();
+            }
+        }
+
+        private void LoadSettings_Click(object sender, RoutedEventArgs e)
+        {
+            var openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Settings file|*.xml";
+            openFileDialog.Title = "Load settings";
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                var fs = (FileStream) openFileDialog.OpenFile();
+
+                var serial = new XmlSerializer(typeof(Settings));
+                var settings = (Settings) serial.Deserialize(fs);
+
+                foreach (CounterPath path in settings.CounterPaths)
+                {
+                    CategoryItem category = Categories.FirstOrDefault(item => item.Name == path.CategoryName);
+                    if (category == null) continue;
+                    InstanceItem instance = category.Instances.FirstOrDefault(item => item.Name == path.InstanceName);
+                    if (instance == null) continue;
+                    CounterItem counter = instance.Counters.FirstOrDefault(item => item.Name == path.CounterName);
+                    if (counter == null) continue;
+
+                    counter.IsChecked = true;
+                }
+
+                fs.Close();
             }
         }
 

@@ -35,6 +35,12 @@
             </lvc:CartesianChart.AxisY>
         </lvc:CartesianChart>
         <TreeView Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Categories}">
+            <TreeView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Save settings" Click="SaveSettings_Click" />
+                    <MenuItem Header="Load settings" Click="LoadSettings_Click" />
+                </ContextMenu>
+            </TreeView.ContextMenu>
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type local:CategoryItem}" ItemsSource="{Binding Instances}">
                     <TextBlock Text="{Binding Name}" />
