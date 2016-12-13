@@ -88,6 +88,7 @@ namespace Perfmon
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = this;
 
             var mapper = Mappers.Xy<MeasureModel>()
                 .X(model => model.DateTime.Ticks)
@@ -113,8 +114,6 @@ namespace Perfmon
 
             Counters = new List<PerformanceCounter>();
             CounterMap = new Dictionary<PerformanceCounter, LineSeries>();
-
-            DataContext = this;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -252,7 +251,7 @@ namespace Perfmon
 
         private void LoadSettings_Click(object sender, RoutedEventArgs e)
         {
-            var openFileDialog = new OpenFileDialog();
+            OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "Settings file|*.xml";
             openFileDialog.Title = "Load settings";
 
