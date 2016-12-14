@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:local="clr-namespace:PerfmonClient"
         xmlns:model="clr-namespace:PerfmonClient.Model"
         xmlns:ui="clr-namespace:PerfmonClient.UI"
@@ -45,13 +46,11 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="{x:Type model:ChartItem}">
-                                    <TextBlock Text="(empty)"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center" />
+                                    <lvc:CartesianChart AllowDrop="True" Drop="CartesianChart_Drop" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                             <ItemsControl.ItemContainerStyle>
-                                <Style>
+                                <Style TargetType="{x:Type ContentPresenter}">
                                     <Setter Property="Grid.Row" Value="{Binding Row}" />
                                     <Setter Property="Grid.Column" Value="{Binding Column}" />
                                 </Style>
@@ -61,13 +60,24 @@
                 </TabControl.ContentTemplate>
             </TabControl>
             <GridSplitter Grid.Column="1" HorizontalAlignment="Center" Width="4" />
-            <TreeView Grid.Column="2">
+            <TreeView x:Name="treeView" Grid.Column="2"
+                      PreviewMouseLeftButtonDown="treeView_PreviewMouseLeftButtonDown"
+                      PreviewMouseMove="treeView_PreviewMouseMove">
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="{x:Type TreeViewItem}">
+                        <EventSetter Event="PreviewMouseLeftButtonDown"
+                                     Handler="TreeViewItem_PreviewMouseLeftButtonDown" />
+                    </Style>
+                </TreeView.ItemContainerStyle>
                 <TreeViewItem Header="Test category" IsExpanded="True">
                     <TreeViewItem Header="*" IsExpanded="True">
+                        <TreeViewItem Header="Test counter" />
+                        <!--
                         <StackPanel Orientation="Horizontal">
                             <CheckBox Margin="0,0,3,0" />
                             <TextBlock Text="Test counter" />
                         </StackPanel>
+                        -->
                     </TreeViewItem>
                 </TreeViewItem>
             </TreeView>
