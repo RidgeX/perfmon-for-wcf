@@ -1,4 +1,6 @@
-﻿using LiveCharts.Wpf;
+﻿using LiveCharts;
+using LiveCharts.Configurations;
+using LiveCharts.Wpf;
 using PerfmonClient.Model;
 using PerfmonClient.UI;
 using System;
@@ -16,6 +18,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace PerfmonClient
 {
@@ -31,15 +34,57 @@ namespace PerfmonClient
     {
         public ObservableCollection<Tab> Tabs { get; set; }
 
+        public DispatcherTimer Timer { get; set; }
+        public Random R { get; set; }
+
         public MainWindow()
         {
             InitializeComponent();
             DataContext = this;
 
+            var mapper = Mappers.Xy<MeasureModel>()
+                .X(model => model.DateTime.Ticks)
+                .Y(model => model.Value);
+            Charting.For<MeasureModel>(mapper);
+
             Tabs = new ObservableCollection<Tab>();
             Tab tab = new Tab("Default", 2, 2);
             Tabs.Add(tab);
             tabControl.SelectedItem = tab;
+
+            Timer = new DispatcherTimer()
+            {
+                Interval = TimeSpan.FromMilliseconds(500)
+            };
+            Timer.Tick += Timer_Tick;
+            R = new Random();
+
+            Timer.Start();
+        }
+
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            var now = DateTime.Now;
+
+            foreach (Tab tab in Tabs)
+            {
+                foreach (ChartItem chartItem in tab.ChartItems)
+                {
+                    foreach (Series series in chartItem.SeriesCollection)
+                    {
+                        IChartValues values = series.Values;
+
+                        values.Add(new MeasureModel()
+                        {
+                            DateTime = now,
+                            Value = R.NextDouble()
+                        });
+                        chartItem.SetAxisLimits(now);
+
+                        if (values.Count > 30) values.RemoveAt(0);
+                    }
+                }
+            }
         }
 
         private void newTabMenuItem_Click(object sender, RoutedEventArgs e)
@@ -129,7 +174,15 @@ namespace PerfmonClient
             {
                 var item = (TreeViewItem) e.Data.GetData(typeof(TreeViewItem));
                 var chart = (CartesianChart) sender;
-                Console.WriteLine("Received: {0}", item.Header);
+
+                LineSeries series = new LineSeries()
+                {
+                    PointGeometrySize = 9,
+                    StrokeThickness = 2,
+                    Title = (string) item.Header,
+                    Values = new ChartValues<MeasureModel>()
+                };
+                chart.Series.Add(series);
             }
         }
     }

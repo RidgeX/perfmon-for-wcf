@@ -72,6 +72,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Model\ChartItem.cs" />
+    <Compile Include="Model\MeasureModel.cs" />
     <Compile Include="Model\Tab.cs" />
     <Compile Include="UI\DragAdorner.cs" />
     <Compile Include="UI\GridHelpers.cs" />
