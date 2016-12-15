@@ -185,5 +185,15 @@ namespace PerfmonClient
                 chart.Series.Add(series);
             }
         }
+
+        private void CartesianChart_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var chart = (CartesianChart) sender;
+
+            if (chart.Series.Any())
+            {
+                chart.Series.Remove(chart.Series.Last());
+            }
+        }
     }
 }

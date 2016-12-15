@@ -46,8 +46,9 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="{x:Type model:ChartItem}">
-                                    <lvc:CartesianChart AllowDrop="True" Drop="CartesianChart_Drop"
-                                                        LegendLocation="Top" Series="{Binding SeriesCollection}">
+                                    <lvc:CartesianChart AllowDrop="True" Drop="CartesianChart_Drop" LegendLocation="Top"
+                                                        PreviewMouseRightButtonDown="CartesianChart_PreviewMouseRightButtonDown"
+                                                        Series="{Binding SeriesCollection}">
                                         <lvc:CartesianChart.AxisX>
                                             <lvc:Axis LabelFormatter="{Binding DateTimeFormatter}"
                                                       MaxValue="{Binding AxisMax}" MinValue="{Binding AxisMin}">
