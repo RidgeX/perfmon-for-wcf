@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:PerfmonClient"
         mc:Ignorable="d"
         Title="New Tab" Height="160" Width="300" MinHeight="160" MinWidth="300"
-        FocusManager.FocusedElement="{Binding ElementName=columnsTextBox}"
+        FocusManager.FocusedElement="{Binding ElementName=nameTextBox}"
         ResizeMode="NoResize" ShowInTaskbar="False" WindowStartupLocation="CenterOwner">
     <Grid>
         <Grid.ColumnDefinitions>

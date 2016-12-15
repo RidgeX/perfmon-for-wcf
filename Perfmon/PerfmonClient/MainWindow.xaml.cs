@@ -24,7 +24,8 @@ namespace PerfmonClient
 {
     static class CustomCommands
     {
-        public static readonly RoutedCommand Quit = new RoutedCommand();
+        public static readonly RoutedCommand NewTab = new RoutedCommand();
+        public static readonly RoutedCommand CloseTab = new RoutedCommand();
     }
     
     /// <summary>
@@ -102,6 +103,22 @@ namespace PerfmonClient
                 Tab tab = new Tab(name, rows, cols);
                 Tabs.Add(tab);
                 tabControl.SelectedItem = tab;
+            }
+        }
+
+        private void closeTabMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var tab = (Tab) tabControl.SelectedItem;
+
+            if (tab != null && MessageBox.Show(
+                string.Format("Are you sure you want to close \"{0}\"?", tab.Name), "Close Tab",
+                MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                // Clear template before removal to avoid binding warnings from TabControl
+                var tabItem = (TabItem) tabControl.ItemContainerGenerator.ContainerFromItem(tab);
+                tabItem.Template = null;
+
+                Tabs.Remove(tab);
             }
         }
 
