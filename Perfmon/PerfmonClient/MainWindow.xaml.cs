@@ -1,11 +1,13 @@
 ﻿using LiveCharts;
 using LiveCharts.Configurations;
 using LiveCharts.Wpf;
+using Microsoft.Win32;
 using PerfmonClient.Model;
 using PerfmonClient.UI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,12 +21,15 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.Xml.Serialization;
 
 namespace PerfmonClient
 {
     static class CustomCommands
     {
         public static readonly RoutedCommand NewTab = new RoutedCommand();
+        public static readonly RoutedCommand SaveTab = new RoutedCommand();
+        public static readonly RoutedCommand LoadTab = new RoutedCommand();
         public static readonly RoutedCommand CloseTab = new RoutedCommand();
     }
     
@@ -103,6 +108,62 @@ namespace PerfmonClient
                 Tab tab = new Tab(name, rows, cols);
                 Tabs.Add(tab);
                 tabControl.SelectedItem = tab;
+            }
+        }
+
+        private void saveTabMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var tab = (Tab) tabControl.SelectedItem;
+
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.FileName = tab.Name;
+            saveFileDialog.Filter = "Tab settings|*.xml";
+            saveFileDialog.Title = "Save Tab";
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var fs = (FileStream) saveFileDialog.OpenFile();
+
+                    var serial = new XmlSerializer(typeof(Tab));
+                    serial.Serialize(fs, tab);
+
+                    fs.Close();
+                }
+                catch (Exception ex)
+                {
+                    while (ex.InnerException != null) ex = ex.InnerException;
+                    MessageBox.Show(ex.Message, "Save Tab", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void loadTabMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Tab settings|*.xml";
+            openFileDialog.Title = "Load Tab";
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var fs = (FileStream) openFileDialog.OpenFile();
+
+                    var serial = new XmlSerializer(typeof(Tab));
+                    var tab = (Tab) serial.Deserialize(fs);
+
+                    Tabs.Add(tab);
+                    tabControl.SelectedItem = tab;
+
+                    fs.Close();
+                }
+                catch (Exception ex)
+                {
+                    while (ex.InnerException != null) ex = ex.InnerException;
+                    MessageBox.Show(ex.Message, "Load Tab", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
