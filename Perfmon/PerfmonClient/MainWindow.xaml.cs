@@ -1,5 +1,6 @@
 ﻿using LiveCharts.Wpf;
 using PerfmonClient.Model;
+using PerfmonClient.UI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -74,6 +75,7 @@ namespace PerfmonClient
             }
         }
 
+        private DragAdorner dragAdorner;
         private Point dragStart;
 
         private void TreeViewItem_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -92,10 +94,33 @@ namespace PerfmonClient
                 if (Math.Abs(offset.X) > SystemParameters.MinimumHorizontalDragDistance ||
                     Math.Abs(offset.Y) > SystemParameters.MinimumVerticalDragDistance)
                 {
+                    Window mainWindow = Application.Current.MainWindow;
+                    mainWindow.AllowDrop = true;
+
+                    var template = new DataTemplate(typeof(TreeViewItem));
+                    var textBlock = new FrameworkElementFactory(typeof(TextBlock));
+                    textBlock.SetBinding(TextBlock.TextProperty, new Binding("Header"));
+                    template.VisualTree = textBlock;
+                    var adornedElement = (UIElement) mainWindow.Content;
+                    var adornerLayer = AdornerLayer.GetAdornerLayer(adornedElement);
+                    dragAdorner = new DragAdorner(item, template, adornedElement, adornerLayer);
+
+                    mainWindow.PreviewDragOver += MainWindow_PreviewDragOver;
+
                     DataObject data = new DataObject(typeof(TreeViewItem), item);
                     DragDrop.DoDragDrop(treeView, data, DragDropEffects.Move);
+
+                    mainWindow.PreviewDragOver -= MainWindow_PreviewDragOver;
+                    dragAdorner.Detach();
+                    mainWindow.AllowDrop = false;
                 }
             }
+        }
+
+        private void MainWindow_PreviewDragOver(object sender, DragEventArgs e)
+        {
+            Point point = e.GetPosition(this);
+            dragAdorner.SetPosition(point.X, point.Y);
         }
 
         private void CartesianChart_Drop(object sender, DragEventArgs e)

@@ -73,6 +73,7 @@
     </Compile>
     <Compile Include="Model\ChartItem.cs" />
     <Compile Include="Model\Tab.cs" />
+    <Compile Include="UI\DragAdorner.cs" />
     <Compile Include="UI\GridHelpers.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
