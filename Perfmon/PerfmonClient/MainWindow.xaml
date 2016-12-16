@@ -90,6 +90,7 @@
                     <Style TargetType="{x:Type TreeViewItem}">
                         <EventSetter Event="PreviewMouseLeftButtonDown"
                                      Handler="TreeViewItem_PreviewMouseLeftButtonDown" />
+                        <Setter Property="IsSelected" Value="{Binding IsSelected}" />
                     </Style>
                 </TreeView.ItemContainerStyle>
                 <TreeView.Resources>
