@@ -7,6 +7,8 @@ using PerfmonClient.UI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -38,8 +40,8 @@ namespace PerfmonClient
     /// </summary>
     public partial class MainWindow : Window
     {
+        public ObservableCollection<CategoryItem> CategoryItems { get; set; }
         public ObservableCollection<Tab> Tabs { get; set; }
-
         public DispatcherTimer Timer { get; set; }
         public Random R { get; set; }
 
@@ -52,6 +54,12 @@ namespace PerfmonClient
                 .X(model => model.DateTime.Ticks)
                 .Y(model => model.Value);
             Charting.For<MeasureModel>(mapper);
+
+            CategoryItems = new ObservableCollection<CategoryItem>();
+            CategoryItems.Add(MakeCategoryItem("ServiceModelEndpoint 4.0.0.0"));
+            CategoryItems.Add(MakeCategoryItem("ServiceModelOperation 4.0.0.0"));
+            CategoryItems.Add(MakeCategoryItem("ServiceModelService 4.0.0.0"));
+            CategoryItems.Add(MakeCategoryItem("Test category"));
 
             Tabs = new ObservableCollection<Tab>();
             Tab tab = new Tab("Default", 2, 2);
@@ -190,7 +198,7 @@ namespace PerfmonClient
 
         private void treeView_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            var item = (TreeViewItem) treeView.SelectedItem;
+            var item = (Item) treeView.SelectedItem;
 
             if (item != null)
             {
@@ -208,9 +216,9 @@ namespace PerfmonClient
 
         private void treeView_PreviewMouseMove(object sender, MouseEventArgs e)
         {
-            var item = (TreeViewItem) treeView.SelectedItem;
+            var item = (Item) treeView.SelectedItem;
 
-            if (item != null && e.LeftButton == MouseButtonState.Pressed)
+            if (item != null && item is CounterItem && e.LeftButton == MouseButtonState.Pressed)
             {
                 Vector offset = e.GetPosition(null) - dragStart;
 
@@ -220,9 +228,9 @@ namespace PerfmonClient
                     Window mainWindow = Application.Current.MainWindow;
                     mainWindow.AllowDrop = true;
 
-                    var template = new DataTemplate(typeof(TreeViewItem));
+                    var template = new DataTemplate(typeof(CounterItem));
                     var textBlock = new FrameworkElementFactory(typeof(TextBlock));
-                    textBlock.SetBinding(TextBlock.TextProperty, new Binding("Header"));
+                    textBlock.SetBinding(TextBlock.TextProperty, new Binding("Name"));
                     template.VisualTree = textBlock;
                     var adornedElement = (UIElement) mainWindow.Content;
                     var adornerLayer = AdornerLayer.GetAdornerLayer(adornedElement);
@@ -230,7 +238,7 @@ namespace PerfmonClient
 
                     mainWindow.PreviewDragOver += MainWindow_PreviewDragOver;
 
-                    DataObject data = new DataObject(typeof(TreeViewItem), item);
+                    DataObject data = new DataObject(typeof(CounterItem), item);
                     DragDrop.DoDragDrop(treeView, data, DragDropEffects.Move);
 
                     mainWindow.PreviewDragOver -= MainWindow_PreviewDragOver;
@@ -248,16 +256,16 @@ namespace PerfmonClient
 
         private void CartesianChart_Drop(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent(typeof(TreeViewItem)))
+            if (e.Data.GetDataPresent(typeof(CounterItem)))
             {
-                var item = (TreeViewItem) e.Data.GetData(typeof(TreeViewItem));
+                var item = (CounterItem) e.Data.GetData(typeof(CounterItem));
                 var chart = (CartesianChart) sender;
 
                 LineSeries series = new LineSeries()
                 {
                     PointGeometrySize = 9,
                     StrokeThickness = 2,
-                    Title = (string) item.Header,
+                    Title = item.Name,
                     Values = new ChartValues<MeasureModel>()
                 };
                 chart.Series.Add(series);
@@ -272,6 +280,50 @@ namespace PerfmonClient
             {
                 chart.Series.Remove(chart.Series.Last());
             }
+        }
+
+        private CategoryItem MakeCategoryItem(string categoryName)
+        {
+            var instanceItems = new ObservableCollection<InstanceItem>();
+            var category = PerformanceCounterCategory.GetCategories().First(c => c.CategoryName == categoryName);
+
+            string[] instanceNames = category.GetInstanceNames();
+            Array.Sort(instanceNames);
+
+            if (instanceNames.Any())
+            {
+                foreach (string instanceName in instanceNames)
+                {
+                    if (category.InstanceExists(instanceName))
+                    {
+                        instanceItems.Add(MakeInstanceItem(instanceName, category.GetCounters(instanceName)));
+                    }
+                }
+            }
+            else
+            {
+                instanceItems.Add(MakeInstanceItem("*", category.GetCounters()));
+            }
+
+            return new CategoryItem(categoryName, instanceItems);
+        }
+
+        private InstanceItem MakeInstanceItem(string instanceName, PerformanceCounter[] counters)
+        {
+            var counterItems = new ObservableCollection<CounterItem>();
+
+            foreach (PerformanceCounter counter in counters)
+            {
+                counterItems.Add(MakeCounterItem(counter.CounterName, counter));
+            }
+
+            return new InstanceItem(instanceName, counterItems);
+        }
+
+        private CounterItem MakeCounterItem(string counterName, PerformanceCounter counter)
+        {
+            CounterItem counterItem = new CounterItem(counterName, counter);
+            return counterItem;
         }
     }
 }

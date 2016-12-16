@@ -83,7 +83,7 @@
                 </TabControl.ContentTemplate>
             </TabControl>
             <GridSplitter Grid.Column="1" HorizontalAlignment="Center" Width="4" />
-            <TreeView x:Name="treeView" Grid.Column="2"
+            <TreeView x:Name="treeView" Grid.Column="2" ItemsSource="{Binding CategoryItems}"
                       PreviewMouseLeftButtonDown="treeView_PreviewMouseLeftButtonDown"
                       PreviewMouseMove="treeView_PreviewMouseMove">
                 <TreeView.ItemContainerStyle>
@@ -92,17 +92,20 @@
                                      Handler="TreeViewItem_PreviewMouseLeftButtonDown" />
                     </Style>
                 </TreeView.ItemContainerStyle>
-                <TreeViewItem Header="Test category" IsExpanded="True">
-                    <TreeViewItem Header="*" IsExpanded="True">
-                        <TreeViewItem Header="Test counter" />
-                        <!--
+                <TreeView.Resources>
+                    <HierarchicalDataTemplate DataType="{x:Type model:CategoryItem}" ItemsSource="{Binding InstanceItems}">
+                        <TextBlock Text="{Binding Name}" />
+                    </HierarchicalDataTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type model:InstanceItem}" ItemsSource="{Binding CounterItems}">
+                        <TextBlock Text="{Binding Name}" />
+                    </HierarchicalDataTemplate>
+                    <DataTemplate DataType="{x:Type model:CounterItem}">
                         <StackPanel Orientation="Horizontal">
-                            <CheckBox Margin="0,0,3,0" />
-                            <TextBlock Text="Test counter" />
+                            <!-- <CheckBox IsChecked="{Binding IsChecked}" Margin="0,0,3,0" /> -->
+                            <TextBlock Text="{Binding Name}" />
                         </StackPanel>
-                        -->
-                    </TreeViewItem>
-                </TreeViewItem>
+                    </DataTemplate>
+                </TreeView.Resources>
             </TreeView>
         </Grid>
     </DockPanel>
