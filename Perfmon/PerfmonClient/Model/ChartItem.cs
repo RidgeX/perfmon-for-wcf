@@ -3,9 +3,11 @@ using LiveCharts.Wpf;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -82,6 +84,8 @@ namespace PerfmonClient.Model
 
         public void ReadXml(XmlReader reader)
         {
+            var mainWindow = (MainWindow) Application.Current.MainWindow;
+
             if (reader.MoveToContent() == XmlNodeType.Element && reader.LocalName.Equals("ChartItem"))
             {
                 Row = int.Parse(reader.GetAttribute("Row"));
@@ -91,16 +95,29 @@ namespace PerfmonClient.Model
                 {
                     while (reader.MoveToContent() == XmlNodeType.Element && reader.LocalName.Equals("Series"))
                     {
-                        string title = reader.GetAttribute("Title");
+                        string categoryName = reader.GetAttribute("CategoryName");
+                        string instanceName = reader.GetAttribute("InstanceName");
+                        string counterName = reader.GetAttribute("CounterName");
+                        CounterItem counterItem = mainWindow.FindCounterItem(categoryName, instanceName, counterName);
+
+                        if (counterItem == null)
+                        {
+                            MessageBox.Show(string.Format("The following counter could not be found:\n\\{0}({1})\\{2}",
+                                categoryName, instanceName, counterName), "Load Tab",
+                                MessageBoxButton.OK, MessageBoxImage.Warning);
+                            reader.Read();
+                            continue;
+                        }
 
                         LineSeries series = new LineSeries()
                         {
                             PointGeometrySize = 9,
                             StrokeThickness = 2,
-                            Title = title,
+                            Title = counterItem.Name,
                             Values = new ChartValues<MeasureModel>()
                         };
                         SeriesCollection.Add(series);
+                        mainWindow.CounterSource.Add(series, counterItem);
 
                         reader.Read();
                     }
@@ -112,13 +129,20 @@ namespace PerfmonClient.Model
 
         public void WriteXml(XmlWriter writer)
         {
+            var mainWindow = (MainWindow) Application.Current.MainWindow;
+
             writer.WriteAttributeString("Row", Row.ToString());
             writer.WriteAttributeString("Column", Column.ToString());
 
             foreach (Series series in SeriesCollection)
             {
                 writer.WriteStartElement("Series");
-                writer.WriteAttributeString("Title", series.Title);
+
+                PerformanceCounter counter = mainWindow.CounterSource[series].Counter;
+                writer.WriteAttributeString("CategoryName", counter.CategoryName);
+                writer.WriteAttributeString("InstanceName", string.IsNullOrEmpty(counter.InstanceName) ? "*" : counter.InstanceName);
+                writer.WriteAttributeString("CounterName", counter.CounterName);
+
                 writer.WriteEndElement();
             }
         }

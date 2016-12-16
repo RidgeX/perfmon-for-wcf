@@ -7,7 +7,6 @@ using PerfmonClient.UI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -41,9 +40,9 @@ namespace PerfmonClient
     public partial class MainWindow : Window
     {
         public ObservableCollection<CategoryItem> CategoryItems { get; set; }
+        public Dictionary<Series, CounterItem> CounterSource { get; set; }
         public ObservableCollection<Tab> Tabs { get; set; }
         public DispatcherTimer Timer { get; set; }
-        public Random R { get; set; }
 
         public MainWindow()
         {
@@ -61,6 +60,8 @@ namespace PerfmonClient
             CategoryItems.Add(MakeCategoryItem("ServiceModelService 4.0.0.0"));
             CategoryItems.Add(MakeCategoryItem("Test category"));
 
+            CounterSource = new Dictionary<Series, CounterItem>();
+
             Tabs = new ObservableCollection<Tab>();
             Tab tab = new Tab("Default", 2, 2);
             Tabs.Add(tab);
@@ -71,8 +72,6 @@ namespace PerfmonClient
                 Interval = TimeSpan.FromMilliseconds(500)
             };
             Timer.Tick += Timer_Tick;
-            R = new Random();
-
             Timer.Start();
         }
 
@@ -91,7 +90,7 @@ namespace PerfmonClient
                         values.Add(new MeasureModel()
                         {
                             DateTime = now,
-                            Value = R.NextDouble()
+                            Value = CounterSource[series].Counter.NextValue()
                         });
                         chartItem.SetAxisLimits(now);
 
@@ -299,6 +298,7 @@ namespace PerfmonClient
                     Values = new ChartValues<MeasureModel>()
                 };
                 chart.Series.Add(series);
+                CounterSource.Add(series, item);
             }
         }
 
@@ -308,7 +308,9 @@ namespace PerfmonClient
 
             if (chart.Series.Any())
             {
-                chart.Series.Remove(chart.Series.Last());
+                var series = (Series) chart.Series.Last();
+                CounterSource.Remove(series);
+                chart.Series.Remove(series);
             }
         }
 
@@ -353,6 +355,16 @@ namespace PerfmonClient
         private CounterItem MakeCounterItem(string counterName, PerformanceCounter counter)
         {
             CounterItem counterItem = new CounterItem(counterName, counter);
+            return counterItem;
+        }
+
+        public CounterItem FindCounterItem(string categoryName, string instanceName, string counterName)
+        {
+            CategoryItem categoryItem = CategoryItems.FirstOrDefault(item => item.Name == categoryName);
+            if (categoryItem == null) return null;
+            InstanceItem instanceItem = categoryItem.InstanceItems.FirstOrDefault(item => item.Name == instanceName);
+            if (instanceItem == null) return null;
+            CounterItem counterItem = instanceItem.CounterItems.FirstOrDefault(item => item.Name == counterName);
             return counterItem;
         }
     }

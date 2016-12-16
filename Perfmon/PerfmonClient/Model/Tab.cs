@@ -1,10 +1,12 @@
-﻿using System;
+﻿using LiveCharts.Wpf;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -84,6 +86,16 @@ namespace PerfmonClient.Model
 
         public void Destroy()
         {
+            var mainWindow = (MainWindow) Application.Current.MainWindow;
+
+            foreach (ChartItem chartItem in ChartItems)
+            {
+                foreach (Series series in chartItem.SeriesCollection)
+                {
+                    mainWindow.CounterSource.Remove(series);
+                }
+            }
+
             ChartItems.Clear();
         }
 
