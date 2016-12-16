@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,11 +11,39 @@ using System.Xml.Serialization;
 
 namespace PerfmonClient.Model
 {
-    public class Tab : IXmlSerializable
+    public class Tab : INotifyPropertyChanged, IXmlSerializable
     {
-        public string Name { get; set; }
-        public int Rows { get; set; }
-        public int Columns { get; set; }
+        private string name;
+        private int rows;
+        private int columns;
+
+        public string Name
+        {
+            get { return name; }
+            set
+            {
+                name = value;
+                OnPropertyChanged("Name");
+            }
+        }
+        public int Rows
+        {
+            get { return rows; }
+            set
+            {
+                rows = value;
+                OnPropertyChanged("Rows");
+            }
+        }
+        public int Columns
+        {
+            get { return columns; }
+            set
+            {
+                columns = value;
+                OnPropertyChanged("Columns");
+            }
+        }
         public ObservableCollection<ChartItem> ChartItems { get; set; }
 
         public Tab()
@@ -29,13 +58,33 @@ namespace PerfmonClient.Model
             Columns = cols;
             ChartItems = new ObservableCollection<ChartItem>();
 
-            for (int row = 0; row < rows; row++)
+            Initialize();
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
             {
-                for (int col = 0; col < cols; col++)
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
+        public void Initialize()
+        {
+            for (int row = 0; row < Rows; row++)
+            {
+                for (int col = 0; col < Columns; col++)
                 {
                     ChartItems.Add(new ChartItem(row, col));
                 }
             }
+        }
+
+        public void Destroy()
+        {
+            ChartItems.Clear();
         }
 
         #region Serialization

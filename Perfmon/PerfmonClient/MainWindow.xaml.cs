@@ -122,6 +122,7 @@ namespace PerfmonClient
         private void saveTabMenuItem_Click(object sender, RoutedEventArgs e)
         {
             var tab = (Tab) tabControl.SelectedItem;
+            if (tab == null) return;
 
             SaveFileDialog saveFileDialog = new SaveFileDialog();
             saveFileDialog.FileName = tab.Name;
@@ -175,12 +176,40 @@ namespace PerfmonClient
             }
         }
 
-        private void closeTabMenuItem_Click(object sender, RoutedEventArgs e)
+        private void editTabMenuItem_Click(object sender, RoutedEventArgs e)
         {
             var tab = (Tab) tabControl.SelectedItem;
 
-            if (tab != null && MessageBox.Show(
-                string.Format("Are you sure you want to close \"{0}\"?", tab.Name), "Close Tab",
+            NewTabDialog dialog = new NewTabDialog();
+            dialog.Title = "Edit Tab";
+            dialog.TabName = tab.Name;
+            dialog.Rows = tab.Rows;
+            dialog.Columns = tab.Columns;
+            dialog.Owner = this;
+            dialog.ShowDialog();
+
+            if (dialog.DialogResult == true)
+            {
+                tab.Name = dialog.TabName;
+
+                if ((dialog.Rows != tab.Rows || dialog.Columns != tab.Columns) &&
+                    MessageBox.Show(string.Format("Are you sure you want to resize \"{0}\"?", tab.Name), "Edit Tab",
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    tab.Rows = dialog.Rows;
+                    tab.Columns = dialog.Columns;
+                    tab.Destroy();
+                    tab.Initialize();
+                }
+            }
+        }
+
+        private void closeTabMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var tab = (Tab) tabControl.SelectedItem;
+            if (tab == null) return;
+
+            if (MessageBox.Show(string.Format("Are you sure you want to close \"{0}\"?", tab.Name), "Close Tab",
                 MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
                 // Clear template before removal to avoid binding warnings from TabControl
@@ -188,6 +217,7 @@ namespace PerfmonClient
                 tabItem.Template = null;
 
                 Tabs.Remove(tab);
+                tab.Destroy();
             }
         }
 
