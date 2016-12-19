@@ -302,9 +302,23 @@ namespace PerfmonClient
             }
         }
 
-        private void CartesianChart_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        private void editChartMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            var chart = (CartesianChart) sender;
+            var chart = (CartesianChart) ((sender as MenuItem).Parent as ContextMenu).PlacementTarget;
+
+            EditChartDialog dialog = new EditChartDialog();
+            dialog.Owner = this;
+            dialog.ShowDialog();
+
+            if (dialog.DialogResult == true)
+            {
+                // TODO
+            }
+        }
+
+        private void removeSeriesMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var chart = (CartesianChart) ((sender as MenuItem).Parent as ContextMenu).PlacementTarget;
 
             if (chart.Series.Any())
             {

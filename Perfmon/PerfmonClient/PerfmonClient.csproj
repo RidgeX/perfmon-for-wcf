@@ -63,6 +63,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="EditChartDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -70,6 +74,9 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="EditChartDialog.xaml.cs">
+      <DependentUpon>EditChartDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Model\ChartItem.cs" />
     <Compile Include="Model\Items.cs" />

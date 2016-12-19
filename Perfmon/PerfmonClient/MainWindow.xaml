@@ -8,7 +8,7 @@
         xmlns:model="clr-namespace:PerfmonClient.Model"
         xmlns:ui="clr-namespace:PerfmonClient.UI"
         mc:Ignorable="d"
-        Title="Performance Monitor" Height="576" Width="1024">
+        Title="Performance Monitor" Width="1024" Height="576">
     <Window.CommandBindings>
         <CommandBinding Command="local:CustomCommands.NewTab" Executed="newTabMenuItem_Click" />
         <CommandBinding Command="local:CustomCommands.SaveTab" Executed="saveTabMenuItem_Click" />
@@ -62,9 +62,14 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="{x:Type model:ChartItem}">
-                                    <lvc:CartesianChart AllowDrop="True" Drop="CartesianChart_Drop" LegendLocation="Top"
-                                                        PreviewMouseRightButtonDown="CartesianChart_PreviewMouseRightButtonDown"
-                                                        Series="{Binding SeriesCollection}">
+                                    <lvc:CartesianChart AllowDrop="True" Drop="CartesianChart_Drop"
+                                                        LegendLocation="Top" Series="{Binding SeriesCollection}">
+                                        <lvc:CartesianChart.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="Edit" Click="editChartMenuItem_Click" />
+                                                <MenuItem Header="Remove" Click="removeSeriesMenuItem_Click" />
+                                            </ContextMenu>
+                                        </lvc:CartesianChart.ContextMenu>
                                         <lvc:CartesianChart.AxisX>
                                             <lvc:Axis LabelFormatter="{Binding DateTimeFormatter}"
                                                       MaxValue="{Binding AxisMax}" MinValue="{Binding AxisMin}">
