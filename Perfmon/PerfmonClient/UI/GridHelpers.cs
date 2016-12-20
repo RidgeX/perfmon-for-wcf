@@ -8,9 +8,11 @@ using System.Windows.Controls;
 
 namespace PerfmonClient.UI
 {
-    public class GridHelpers
+    public static class GridHelpers
     {
-        #region RowCount Property
+        #region Properties
+
+        #region RowCount
 
         /// <summary>
         /// Adds the specified number of rows to RowDefinitions.
@@ -18,7 +20,7 @@ namespace PerfmonClient.UI
         public static readonly DependencyProperty RowCountProperty =
             DependencyProperty.RegisterAttached(
                 "RowCount", typeof(int), typeof(GridHelpers),
-                new PropertyMetadata(-1, RowCountChanged));
+                new PropertyMetadata(-1, OnRowCountChanged));
 
         public static int GetRowCount(DependencyObject obj)
         {
@@ -30,7 +32,7 @@ namespace PerfmonClient.UI
             obj.SetValue(RowCountProperty, value);
         }
 
-        public static void RowCountChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
+        private static void OnRowCountChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
         {
             if (!(obj is Grid) || (int) e.NewValue < 0) return;
 
@@ -45,9 +47,9 @@ namespace PerfmonClient.UI
             }
         }
 
-        #endregion
+        #endregion //RowCount
 
-        #region ColumnCount Property
+        #region ColumnCount
 
         /// <summary>
         /// Adds the specified number of columns to ColumnDefinitions.
@@ -55,7 +57,7 @@ namespace PerfmonClient.UI
         public static readonly DependencyProperty ColumnCountProperty =
             DependencyProperty.RegisterAttached(
                 "ColumnCount", typeof(int), typeof(GridHelpers),
-                new PropertyMetadata(-1, ColumnCountChanged));
+                new PropertyMetadata(-1, OnColumnCountChanged));
 
         public static int GetColumnCount(DependencyObject obj)
         {
@@ -67,7 +69,7 @@ namespace PerfmonClient.UI
             obj.SetValue(ColumnCountProperty, value);
         }
 
-        public static void ColumnCountChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
+        private static void OnColumnCountChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
         {
             if (!(obj is Grid) || (int) e.NewValue < 0) return;
 
@@ -82,6 +84,8 @@ namespace PerfmonClient.UI
             }
         }
 
-        #endregion
+        #endregion //ColumnCount
+
+        #endregion //Properties
     }
 }

@@ -26,14 +26,14 @@ using System.Xml.Serialization;
 
 namespace PerfmonClient
 {
-    static class CustomCommands
+    public static class CustomCommands
     {
         public static readonly RoutedCommand NewTab = new RoutedCommand();
         public static readonly RoutedCommand SaveTab = new RoutedCommand();
         public static readonly RoutedCommand LoadTab = new RoutedCommand();
         public static readonly RoutedCommand CloseTab = new RoutedCommand();
     }
-    
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -55,6 +55,8 @@ namespace PerfmonClient
             Charting.For<MeasureModel>(mapper);
 
             CategoryItems = new ObservableCollection<CategoryItem>();
+            CategoryItems.Add(MakeCategoryItem("Memory"));
+            CategoryItems.Add(MakeCategoryItem("Processor"));
             CategoryItems.Add(MakeCategoryItem("ServiceModelEndpoint 4.0.0.0"));
             CategoryItems.Add(MakeCategoryItem("ServiceModelOperation 4.0.0.0"));
             CategoryItems.Add(MakeCategoryItem("ServiceModelService 4.0.0.0"));

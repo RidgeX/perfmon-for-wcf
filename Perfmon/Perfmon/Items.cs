@@ -12,7 +12,7 @@ namespace Perfmon
     public abstract class Item : INotifyPropertyChanged
     {
         public string Name { get; set; }
-        
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void OnPropertyChanged(string propertyName)
