@@ -3,6 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:local="clr-namespace:PerfmonClient"
         mc:Ignorable="d"
         Title="Edit Chart" Width="400" Height="300" MinWidth="400" MinHeight="300"
@@ -15,9 +17,34 @@
         <TabControl Grid.Row="0">
             <TabItem Header="Counters">
                 <ListView>
-                    <ListViewItem Content="Counter 1" />
-                    <ListViewItem Content="Counter 2" />
-                    <ListViewItem Content="Counter 3" />
+                    <ListView.Items>
+                        <lvc:LineSeries Title="Counter 1" Stroke="Red" />
+                        <lvc:LineSeries Title="Counter 2" Stroke="Green" />
+                        <lvc:LineSeries Title="Counter 3" Stroke="Blue" />
+                    </ListView.Items>
+                    <ListView.ItemTemplate>
+                        <DataTemplate DataType="{x:Type lvc:LineSeries}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding Title}"
+                                           VerticalAlignment="Center" />
+                                <xctk:ColorPicker Grid.Column="1"
+                                                  SelectedColor="{Binding Stroke.Color, Mode=OneWay}"
+                                                  ShowAdvancedButton="False"
+                                                  ShowAvailableColors="False"
+                                                  StandardColors="{Binding MaterialColors, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:EditChartDialog}}}"
+                                                  StandardColorsHeader="Colors" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="{x:Type ListViewItem}">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
                 </ListView>
             </TabItem>
         </TabControl>
