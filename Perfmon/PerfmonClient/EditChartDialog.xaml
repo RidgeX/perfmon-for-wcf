@@ -20,7 +20,8 @@
         </Grid.RowDefinitions>
         <TabControl Grid.Row="0">
             <TabItem Header="Counters">
-                <ListView ItemsSource="{Binding SeriesCollection}">
+                <ListView ItemsSource="{Binding SeriesCollection}"
+                          d:DataContext="{d:DesignData Source=/EditChartDialogTestData.xaml}">
                     <ListView.ItemTemplate>
                         <DataTemplate DataType="{x:Type lvc:LineSeries}">
                             <Grid>

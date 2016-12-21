@@ -1,0 +1,33 @@
+﻿<model:ChartItem xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:opt="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+                 xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+                 xmlns:local="clr-namespace:PerfmonClient"
+                 xmlns:model="clr-namespace:PerfmonClient.Model">
+    <model:ChartItem.SeriesCollection>
+        <lvc:LineSeries Title="Counter 1">
+            <lvc:LineSeries.Stroke>
+                <SolidColorBrush Color="#F44336" opt:Freeze="True" />
+            </lvc:LineSeries.Stroke>
+            <lvc:LineSeries.Fill>
+                <SolidColorBrush Color="#F44336" Opacity="0.15" opt:Freeze="True" />
+            </lvc:LineSeries.Fill>
+        </lvc:LineSeries>
+        <lvc:LineSeries Title="Counter 2">
+            <lvc:LineSeries.Stroke>
+                <SolidColorBrush Color="#4CAF50" opt:Freeze="True" />
+            </lvc:LineSeries.Stroke>
+            <lvc:LineSeries.Fill>
+                <SolidColorBrush Color="#4CAF50" Opacity="0.15" opt:Freeze="True" />
+            </lvc:LineSeries.Fill>
+        </lvc:LineSeries>
+        <lvc:LineSeries Title="Counter 3">
+            <lvc:LineSeries.Stroke>
+                <SolidColorBrush Color="#2196F3" opt:Freeze="True" />
+            </lvc:LineSeries.Stroke>
+            <lvc:LineSeries.Fill>
+                <SolidColorBrush Color="#2196F3" Opacity="0.15" opt:Freeze="True" />
+            </lvc:LineSeries.Fill>
+        </lvc:LineSeries>
+    </model:ChartItem.SeriesCollection>
+</model:ChartItem>
