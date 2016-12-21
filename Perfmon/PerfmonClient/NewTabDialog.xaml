@@ -22,7 +22,7 @@
         <Label Grid.Row="0" Grid.Column="0">Name:</Label>
         <TextBox x:Name="nameTextBox" Grid.Row="0" Grid.Column="1">
             <TextBox.Text>
-                <Binding Path="TabName" UpdateSourceTrigger="PropertyChanged">
+                <Binding Path="TabName" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
                     <Binding.ValidationRules>
                         <local:NameValidationRule />
                     </Binding.ValidationRules>
@@ -32,7 +32,7 @@
         <Label Grid.Row="1" Grid.Column="0">Columns:</Label>
         <TextBox x:Name="columnsTextBox" Grid.Row="1" Grid.Column="1">
             <TextBox.Text>
-                <Binding Path="Columns" UpdateSourceTrigger="PropertyChanged">
+                <Binding Path="Columns" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
                     <Binding.ValidationRules>
                         <local:SizeValidationRule />
                     </Binding.ValidationRules>
@@ -42,7 +42,7 @@
         <Label Grid.Row="2" Grid.Column="0">Rows:</Label>
         <TextBox x:Name="rowsTextBox" Grid.Row="2" Grid.Column="1">
             <TextBox.Text>
-                <Binding Path="Rows" UpdateSourceTrigger="PropertyChanged">
+                <Binding Path="Rows" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
                     <Binding.ValidationRules>
                         <local:SizeValidationRule />
                     </Binding.ValidationRules>

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using LiveCharts;
+using LiveCharts.Wpf;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -27,6 +29,8 @@ namespace PerfmonClient
         /// </summary>
         public static ObservableCollection<ColorItem> MaterialColors { get; private set; }
 
+        public SeriesCollection SeriesCollection { get; set; }
+
         static EditChartDialog()
         {
             MaterialColors = new ObservableCollection<ColorItem>()
@@ -54,10 +58,12 @@ namespace PerfmonClient
             };
         }
 
-        public EditChartDialog()
+        public EditChartDialog(CartesianChart chart)
         {
             InitializeComponent();
             DataContext = this;
+
+            SeriesCollection = chart.Series;
         }
 
         private void okButton_Click(object sender, RoutedEventArgs e)

@@ -1,13 +1,16 @@
 ﻿using LiveCharts;
 using LiveCharts.Wpf;
+using PerfmonClient.UI.Converters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -72,6 +75,7 @@ namespace PerfmonClient.Model
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(propertyName));
             }
         }
+
         public void SetAxisLimits(DateTime now)
         {
             AxisMax = now.Ticks + TimeSpan.FromSeconds(1).Ticks;
@@ -95,6 +99,14 @@ namespace PerfmonClient.Model
                 {
                     while (reader.MoveToContent() == XmlNodeType.Element && reader.LocalName.Equals("Series"))
                     {
+                        string title = reader.GetAttribute("Title");
+
+                        var color = (Color) ColorConverter.ConvertFromString(reader.GetAttribute("Color"));
+                        LineSeriesBrushConverter brushConverter = new LineSeriesBrushConverter();
+                        object[] brushes = brushConverter.ConvertBack(color, new Type[] { typeof(SolidColorBrush), typeof(SolidColorBrush) }, null, CultureInfo.InvariantCulture);
+                        var strokeBrush = (SolidColorBrush) brushes[0];
+                        var fillBrush = (SolidColorBrush) brushes[1];
+
                         string categoryName = reader.GetAttribute("CategoryName");
                         string instanceName = reader.GetAttribute("InstanceName");
                         string counterName = reader.GetAttribute("CounterName");
@@ -113,7 +125,9 @@ namespace PerfmonClient.Model
                         {
                             PointGeometrySize = 9,
                             StrokeThickness = 2,
-                            Title = counterItem.Name,
+                            Title = title,
+                            Stroke = strokeBrush,
+                            Fill = fillBrush,
                             Values = new ChartValues<MeasureModel>()
                         };
                         SeriesCollection.Add(series);
@@ -137,6 +151,12 @@ namespace PerfmonClient.Model
             foreach (Series series in SeriesCollection)
             {
                 writer.WriteStartElement("Series");
+
+                writer.WriteAttributeString("Title", series.Title);
+
+                LineSeriesBrushConverter brushConverter = new LineSeriesBrushConverter();
+                var color = (Color) brushConverter.Convert(new object[] { series.Stroke, series.Fill }, typeof(Color), null, CultureInfo.InvariantCulture);
+                writer.WriteAttributeString("Color", color.ToString());
 
                 PerformanceCounter counter = mainWindow.CounterSource[series].Counter;
                 writer.WriteAttributeString("CategoryName", counter.CategoryName);

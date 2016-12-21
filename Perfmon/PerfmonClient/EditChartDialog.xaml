@@ -6,9 +6,13 @@
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:local="clr-namespace:PerfmonClient"
+        xmlns:conv="clr-namespace:PerfmonClient.UI.Converters"
         mc:Ignorable="d"
         Title="Edit Chart" Width="400" Height="300" MinWidth="400" MinHeight="300"
         ResizeMode="NoResize" ShowInTaskbar="False" WindowStartupLocation="CenterOwner">
+    <Window.Resources>
+        <conv:LineSeriesBrushConverter x:Key="LineSeriesBrushConverter" />
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
@@ -16,12 +20,7 @@
         </Grid.RowDefinitions>
         <TabControl Grid.Row="0">
             <TabItem Header="Counters">
-                <ListView>
-                    <ListView.Items>
-                        <lvc:LineSeries Title="Counter 1" Stroke="Red" />
-                        <lvc:LineSeries Title="Counter 2" Stroke="Green" />
-                        <lvc:LineSeries Title="Counter 3" Stroke="Blue" />
-                    </ListView.Items>
+                <ListView ItemsSource="{Binding SeriesCollection}">
                     <ListView.ItemTemplate>
                         <DataTemplate DataType="{x:Type lvc:LineSeries}">
                             <Grid>
@@ -29,14 +28,21 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="{Binding Title}"
-                                           VerticalAlignment="Center" />
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         VerticalAlignment="Center" />
                                 <xctk:ColorPicker Grid.Column="1"
-                                                  SelectedColor="{Binding Stroke.Color, Mode=OneWay}"
                                                   ShowAdvancedButton="False"
                                                   ShowAvailableColors="False"
                                                   StandardColors="{Binding MaterialColors, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:EditChartDialog}}}"
-                                                  StandardColorsHeader="Colors" />
+                                                  StandardColorsHeader="Colors">
+                                    <xctk:ColorPicker.SelectedColor>
+                                        <MultiBinding Converter="{StaticResource LineSeriesBrushConverter}">
+                                            <Binding Path="Stroke" Mode="TwoWay" />
+                                            <Binding Path="Fill" Mode="TwoWay" />
+                                        </MultiBinding>
+                                    </xctk:ColorPicker.SelectedColor>
+                                </xctk:ColorPicker>
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>
@@ -45,6 +51,21 @@
                             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                         </Style>
                     </ListView.ItemContainerStyle>
+                    <ListView.Style>
+                        <Style TargetType="{x:Type ListView}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Items.IsEmpty, RelativeSource={RelativeSource Self}}" Value="True">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="{x:Type ListView}">
+                                                <TextBlock Text="(none)" />
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListView.Style>
                 </ListView>
             </TabItem>
         </TabControl>
@@ -52,9 +73,6 @@
             <Button x:Name="okButton" Click="okButton_Click" IsDefault="True"
                     Margin="5" MinWidth="60">
                 OK
-            </Button>
-            <Button x:Name="cancelButton" IsCancel="True" Margin="5" MinWidth="60">
-                Cancel
             </Button>
         </StackPanel>
     </Grid>

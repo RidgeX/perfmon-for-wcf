@@ -106,6 +106,7 @@
     <Compile Include="Model\Items.cs" />
     <Compile Include="Model\MeasureModel.cs" />
     <Compile Include="Model\Tab.cs" />
+    <Compile Include="UI\Converters\LineSeriesBrushConverter.cs" />
     <Compile Include="UI\DragAdorner.cs" />
     <Compile Include="UI\GridHelpers.cs" />
     <Compile Include="MainWindow.xaml.cs">

@@ -308,14 +308,9 @@ namespace PerfmonClient
         {
             var chart = (CartesianChart) ((sender as MenuItem).Parent as ContextMenu).PlacementTarget;
 
-            EditChartDialog dialog = new EditChartDialog();
+            EditChartDialog dialog = new EditChartDialog(chart);
             dialog.Owner = this;
             dialog.ShowDialog();
-
-            if (dialog.DialogResult == true)
-            {
-                // TODO
-            }
         }
 
         private void removeSeriesMenuItem_Click(object sender, RoutedEventArgs e)
