@@ -29,8 +29,6 @@ namespace PerfmonClient
         /// </summary>
         public static ObservableCollection<ColorItem> MaterialColors { get; private set; }
 
-        public SeriesCollection SeriesCollection { get; set; }
-
         static EditChartDialog()
         {
             MaterialColors = new ObservableCollection<ColorItem>()
@@ -61,9 +59,7 @@ namespace PerfmonClient
         public EditChartDialog(CartesianChart chart)
         {
             InitializeComponent();
-            DataContext = this;
-
-            SeriesCollection = chart.Series;
+            DataContext = chart.DataContext;
         }
 
         private void okButton_Click(object sender, RoutedEventArgs e)
