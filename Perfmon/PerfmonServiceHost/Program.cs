@@ -21,17 +21,37 @@ namespace PerfmonServiceHost
             {
                 selfHost.Open();
 
-                PerformanceCounter counter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+                PerformanceCounterCategory pcc = new PerformanceCounterCategory("Processor");
+                Dictionary<string, CounterSample> prevSamples = new Dictionary<string, CounterSample>();
                 bool running = true;
 
                 while (running)
                 {
-                    service.Notify(new EventData()
+                    InstanceDataCollectionCollection idcc = pcc.ReadCategory();
+
+                    foreach (InstanceDataCollection idc in idcc.Values)
                     {
-                        DateTime = DateTime.Now,
-                        Path = @"\Processor(_Total)\% Processor Time",
-                        Value = counter.NextValue()
-                    });
+                        if (!idc.CounterName.Equals("% Processor Time")) continue;
+
+                        foreach (InstanceData id in idc.Values)
+                        {
+                            string path = string.Format(@"\{0}({1})\{2}", pcc.CategoryName, id.InstanceName, idc.CounterName);
+
+                            CounterSample prevSample;
+                            if (!prevSamples.TryGetValue(path, out prevSample))
+                            {
+                                prevSample = CounterSample.Empty;
+                            }
+                            CounterSample sample = id.Sample;
+                            float value = CounterSample.Calculate(prevSample, sample);
+                            prevSamples[path] = sample;
+
+                            DateTime dateTime = DateTime.FromFileTime(sample.TimeStamp100nSec);
+                            EventData e = new EventData() { DateTime = dateTime, Path = path, Value = value };
+                            service.Notify(e);
+                        }
+                    }
+
                     Thread.Sleep(1000);
                 }
 
