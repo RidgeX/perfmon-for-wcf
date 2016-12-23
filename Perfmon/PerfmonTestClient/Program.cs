@@ -10,7 +10,7 @@ namespace PerfmonTestClient
 {
     public class Callback : IPerfmonCallback
     {
-        public void OnNotify(EventData e)
+        public void OnNext(EventData e)
         {
             Console.WriteLine("{0} {1} {2}", e.DateTime, e.Path, e.Value);
         }

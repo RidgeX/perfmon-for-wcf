@@ -11,9 +11,6 @@ namespace PerfmonServiceLibrary
     public interface IPerfmonService
     {
         [OperationContract]
-        void Notify(EventData e);
-
-        [OperationContract]
         void Subscribe(string path);
 
         [OperationContract]
@@ -23,7 +20,7 @@ namespace PerfmonServiceLibrary
     public interface IPerfmonCallback
     {
         [OperationContract(IsOneWay = true)]
-        void OnNotify(EventData e);
+        void OnNext(EventData e);
     }
 
     [DataContract]

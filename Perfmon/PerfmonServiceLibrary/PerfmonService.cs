@@ -24,24 +24,6 @@ namespace PerfmonServiceLibrary
             subscribers = new Dictionary<string, List<IPerfmonCallback>>();
         }
 
-        public void Notify(EventData e)
-        {
-            lock (_lock)
-            {
-                List<IPerfmonCallback> list;
-                if (subscribers.TryGetValue(e.Path, out list))
-                {
-                    ThreadPool.QueueUserWorkItem(_ =>
-                    {
-                        Parallel.ForEach(list, subscriber =>
-                        {
-                            subscriber.OnNotify(e);
-                        });
-                    });
-                }
-            }
-        }
-
         public void Subscribe(string path)
         {
             IPerfmonCallback callback = OperationContext.Current.GetCallbackChannel<IPerfmonCallback>();
@@ -103,7 +85,21 @@ namespace PerfmonServiceLibrary
 
                     DateTime dateTime = DateTime.FromFileTime(sample.TimeStamp100nSec);
                     EventData e = new EventData() { DateTime = dateTime, Path = path, Value = value };
-                    Notify(e);
+
+                    lock (_lock)
+                    {
+                        List<IPerfmonCallback> list;
+                        if (subscribers.TryGetValue(path, out list))
+                        {
+                            ThreadPool.QueueUserWorkItem(_ =>
+                            {
+                                Parallel.ForEach(list, subscriber =>
+                                {
+                                    subscriber.OnNext(e);
+                                });
+                            });
+                        }
+                    }
                 }
             }
         }
