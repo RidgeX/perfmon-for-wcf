@@ -30,7 +30,7 @@ namespace PerfmonServiceLibrary
     public class EventData
     {
         [DataMember]
-        public DateTime Time { get; set; }
+        public DateTime DateTime { get; set; }
 
         [DataMember]
         public string Path { get; set; }

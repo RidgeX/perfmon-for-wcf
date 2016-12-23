@@ -1,6 +1,7 @@
 ﻿using PerfmonServiceLibrary;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.ServiceModel;
 using System.Text;
@@ -20,16 +21,16 @@ namespace PerfmonServiceHost
             {
                 selfHost.Open();
 
-                Random random = new Random();
+                PerformanceCounter counter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
                 bool running = true;
 
                 while (running)
                 {
                     service.Notify(new EventData()
                     {
-                        Time = DateTime.Now,
-                        Path = @"\Test category\Test counter",
-                        Value = random.NextDouble()
+                        DateTime = DateTime.Now,
+                        Path = @"\Processor(_Total)\% Processor Time",
+                        Value = counter.NextValue()
                     });
                     Thread.Sleep(1000);
                 }

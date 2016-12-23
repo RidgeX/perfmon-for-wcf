@@ -12,7 +12,7 @@ namespace PerfmonTestClient
     {
         public void OnNotify(EventData e)
         {
-            Console.WriteLine("{0} {1} {2}", e.Time, e.Path, e.Value);
+            Console.WriteLine("{0} {1} {2}", e.DateTime, e.Path, e.Value);
         }
     }
 
@@ -26,7 +26,7 @@ namespace PerfmonTestClient
             DuplexChannelFactory<IPerfmonService> factory = new DuplexChannelFactory<IPerfmonService>(callback, binding, address);
             IPerfmonService service = factory.CreateChannel();
 
-            service.Subscribe(@"\Test category\Test counter");
+            service.Subscribe(@"\Processor(_Total)\% Processor Time");
             Console.ReadLine();
         }
     }
