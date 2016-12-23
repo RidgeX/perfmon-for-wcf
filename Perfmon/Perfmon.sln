@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerfmonServiceHost", "Perfm
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerfmonClient", "PerfmonClient\PerfmonClient.csproj", "{A67081F2-98CC-4F58-A2DF-7560135F5A1B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerfmonTestClient", "PerfmonTestClient\PerfmonTestClient.csproj", "{888F1D25-7979-4B24-8896-C3D65DA9605B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{A67081F2-98CC-4F58-A2DF-7560135F5A1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A67081F2-98CC-4F58-A2DF-7560135F5A1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A67081F2-98CC-4F58-A2DF-7560135F5A1B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{888F1D25-7979-4B24-8896-C3D65DA9605B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{888F1D25-7979-4B24-8896-C3D65DA9605B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{888F1D25-7979-4B24-8896-C3D65DA9605B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{888F1D25-7979-4B24-8896-C3D65DA9605B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -33,9 +33,6 @@ namespace PerfmonServiceLibrary
         public DateTime Time { get; set; }
 
         [DataMember]
-        public string Host { get; set; }
-
-        [DataMember]
         public string Path { get; set; }
 
         [DataMember]

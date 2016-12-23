@@ -28,7 +28,6 @@ namespace PerfmonServiceHost
                     service.Notify(new EventData()
                     {
                         Time = DateTime.Now,
-                        Host = "localhost",
                         Path = @"\Test category\Test counter",
                         Value = random.NextDouble()
                     });
