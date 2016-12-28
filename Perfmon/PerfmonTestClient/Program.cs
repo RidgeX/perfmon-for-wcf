@@ -12,7 +12,18 @@ namespace PerfmonTestClient
     {
         public void OnNext(EventData e)
         {
-            Console.WriteLine("{0} {1} {2}", e.DateTime, e.Path, e.Value);
+            Category category = e.Category;
+            DateTime timestamp = e.Timestamp;
+
+            Console.Clear();
+
+            foreach (Counter counter in category.Counters)
+            {
+                foreach (Instance instance in counter.Instances)
+                {
+                    Console.WriteLine("{0} \\{1}({2})\\{3} {4}", timestamp, category.Name, instance.Name, counter.Name, instance.Value);
+                }
+            }
         }
     }
 
@@ -26,7 +37,7 @@ namespace PerfmonTestClient
             DuplexChannelFactory<IPerfmonService> factory = new DuplexChannelFactory<IPerfmonService>(callback, binding, address);
             IPerfmonService service = factory.CreateChannel();
 
-            service.Subscribe(@"\Processor(_Total)\% Processor Time");
+            service.Subscribe(@"\Processor\% Processor Time");
             Console.ReadLine();
         }
     }

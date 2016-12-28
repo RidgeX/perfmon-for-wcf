@@ -27,12 +27,39 @@ namespace PerfmonServiceLibrary
     public class EventData
     {
         [DataMember]
-        public DateTime DateTime { get; set; }
+        public Category Category { get; set; }
 
         [DataMember]
-        public string Path { get; set; }
+        public DateTime Timestamp { get; set; }
+    }
+
+    [DataContract]
+    public class Category
+    {
+        [DataMember]
+        public string Name { get; set; }
 
         [DataMember]
-        public double Value { get; set; }
+        public List<Counter> Counters { get; set; }
+    }
+
+    [DataContract]
+    public class Counter
+    {
+        [DataMember]
+        public string Name { get; set; }
+
+        [DataMember]
+        public List<Instance> Instances { get; set; }
+    }
+
+    [DataContract]
+    public class Instance
+    {
+        [DataMember]
+        public string Name { get; set; }
+
+        [DataMember]
+        public float Value { get; set; }
     }
 }

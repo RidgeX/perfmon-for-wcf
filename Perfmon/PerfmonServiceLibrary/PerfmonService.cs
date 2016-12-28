@@ -70,6 +70,10 @@ namespace PerfmonServiceLibrary
             {
                 if (!idc.CounterName.Equals("% Processor Time")) continue;
 
+                string key = string.Format(@"\{0}\{1}", pcc.CategoryName, idc.CounterName);
+                List<Instance> instances = new List<Instance>();
+                DateTime? timestamp = null;
+
                 foreach (InstanceData id in idc.Values)
                 {
                     string path = string.Format(@"\{0}({1})\{2}", pcc.CategoryName, id.InstanceName, idc.CounterName);
@@ -83,22 +87,32 @@ namespace PerfmonServiceLibrary
                     float value = CounterSample.Calculate(prevSample, sample);
                     prevSamples[path] = sample;
 
-                    DateTime dateTime = DateTime.FromFileTime(sample.TimeStamp100nSec);
-                    EventData e = new EventData() { DateTime = dateTime, Path = path, Value = value };
-
-                    lock (_lock)
+                    if (timestamp == null)
                     {
-                        List<IPerfmonCallback> list;
-                        if (subscribers.TryGetValue(path, out list))
+                        timestamp = DateTime.FromFileTime(sample.TimeStamp100nSec);
+                    }
+
+                    instances.Add(new Instance() { Name = id.InstanceName, Value = value });
+                }
+
+                if (instances.Count == 0) continue;
+
+                Counter counter = new Counter() { Name = idc.CounterName, Instances = instances };
+                Category category = new Category() { Name = pcc.CategoryName, Counters = new List<Counter>() { counter } };
+                EventData e = new EventData() { Category = category, Timestamp = timestamp.Value };
+
+                lock (_lock)
+                {
+                    List<IPerfmonCallback> list;
+                    if (subscribers.TryGetValue(key, out list))
+                    {
+                        ThreadPool.QueueUserWorkItem(_ =>
                         {
-                            ThreadPool.QueueUserWorkItem(_ =>
+                            Parallel.ForEach(list, subscriber =>
                             {
-                                Parallel.ForEach(list, subscriber =>
-                                {
-                                    subscriber.OnNext(e);
-                                });
+                                subscriber.OnNext(e);
                             });
-                        }
+                        });
                     }
                 }
             }
