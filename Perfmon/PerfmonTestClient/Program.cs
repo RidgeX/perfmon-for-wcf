@@ -37,7 +37,7 @@ namespace PerfmonTestClient
             DuplexChannelFactory<IPerfmonService> factory = new DuplexChannelFactory<IPerfmonService>(callback, binding, address);
             IPerfmonService service = factory.CreateChannel();
 
-            service.Subscribe(@"\Processor\% Processor Time");
+            service.Subscribe("Processor", "% Processor Time");
             Console.ReadLine();
         }
     }

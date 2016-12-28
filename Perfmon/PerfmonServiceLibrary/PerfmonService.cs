@@ -24,14 +24,15 @@ namespace PerfmonServiceLibrary
             subscribers = new Dictionary<string, List<IPerfmonCallback>>();
         }
 
-        public void Subscribe(string path)
+        public void Subscribe(string categoryName, string counterName)
         {
             IPerfmonCallback callback = OperationContext.Current.GetCallbackChannel<IPerfmonCallback>();
+            string key = string.Format(@"\{0}\{1}", categoryName, counterName);
 
             lock (_lock)
             {
                 List<IPerfmonCallback> list;
-                if (subscribers.TryGetValue(path, out list))
+                if (subscribers.TryGetValue(key, out list))
                 {
                     if (!list.Contains(callback))
                     {
@@ -42,19 +43,20 @@ namespace PerfmonServiceLibrary
                 {
                     list = new List<IPerfmonCallback>();
                     list.Add(callback);
-                    subscribers.Add(path, list);
+                    subscribers.Add(key, list);
                 }
             }
         }
 
-        public void Unsubscribe(string path)
+        public void Unsubscribe(string categoryName, string counterName)
         {
             IPerfmonCallback callback = OperationContext.Current.GetCallbackChannel<IPerfmonCallback>();
+            string key = string.Format(@"\{0}\{1}", categoryName, counterName);
 
             lock (_lock)
             {
                 List<IPerfmonCallback> list;
-                if (subscribers.TryGetValue(path, out list))
+                if (subscribers.TryGetValue(key, out list))
                 {
                     list.Remove(callback);
                 }

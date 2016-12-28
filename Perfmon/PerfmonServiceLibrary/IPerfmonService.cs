@@ -11,10 +11,10 @@ namespace PerfmonServiceLibrary
     public interface IPerfmonService
     {
         [OperationContract]
-        void Subscribe(string path);
+        void Subscribe(string categoryName, string counterName);
 
         [OperationContract]
-        void Unsubscribe(string path);
+        void Unsubscribe(string categoryName, string counterName);
     }
 
     public interface IPerfmonCallback
