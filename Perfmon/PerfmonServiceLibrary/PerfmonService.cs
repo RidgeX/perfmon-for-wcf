@@ -59,6 +59,11 @@ namespace PerfmonServiceLibrary
                 if (subscribers.TryGetValue(key, out list))
                 {
                     list.Remove(callback);
+
+                    if (!list.Any())
+                    {
+                        subscribers.Remove(key);
+                    }
                 }
             }
         }
