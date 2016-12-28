@@ -38,6 +38,16 @@ namespace PerfmonTestClient
             DuplexChannelFactory<IPerfmonService> factory = new DuplexChannelFactory<IPerfmonService>(callback, binding, address);
             IPerfmonService service = factory.CreateChannel();
 
+            CategoryList categories = service.List();
+            categories.Sort((a, b) => a.Name.CompareTo(b.Name));
+
+            /*
+            foreach (Category category in categories)
+            {
+                Console.WriteLine(category.Name);
+            }
+            */
+
             service.Subscribe("Processor", "% Processor Time");
             Console.ReadLine();
         }

@@ -11,6 +11,9 @@ namespace PerfmonServiceLibrary
     public interface IPerfmonService
     {
         [OperationContract]
+        CategoryList List();
+
+        [OperationContract]
         void Subscribe(string categoryName, string counterName);
 
         [OperationContract]
@@ -32,6 +35,9 @@ namespace PerfmonServiceLibrary
         [DataMember]
         public DateTime Timestamp { get; set; }
     }
+
+    [CollectionDataContract]
+    public class CategoryList : List<Category> { };
 
     [DataContract]
     public class Category

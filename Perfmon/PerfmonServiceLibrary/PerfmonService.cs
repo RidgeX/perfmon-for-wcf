@@ -24,6 +24,25 @@ namespace PerfmonServiceLibrary
             subscribers = new Dictionary<string, List<IPerfmonCallback>>();
         }
 
+        public CategoryList List()
+        {
+            CategoryList categories = new CategoryList();
+
+            foreach (var category in PerformanceCounterCategory.GetCategories())
+            {
+                List<Counter> counters = new List<Counter>();
+
+                foreach (var counter in category.GetCounters(string.Empty))
+                {
+                    counters.Add(new Counter() { Name = counter.CounterName });
+                }
+
+                categories.Add(new Category() { Name = category.CategoryName, Counters = counters });
+            }
+
+            return categories;
+        }
+
         public void Subscribe(string categoryName, string counterName)
         {
             IPerfmonCallback callback = OperationContext.Current.GetCallbackChannel<IPerfmonCallback>();
