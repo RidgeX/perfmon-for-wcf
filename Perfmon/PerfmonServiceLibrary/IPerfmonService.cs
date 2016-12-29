@@ -55,7 +55,7 @@ namespace PerfmonServiceLibrary
         [DataMember(Order = 0)]
         public string Name { get; set; }
 
-        [DataMember(Order = 1)]
+        [DataMember(Order = 1, EmitDefaultValue = false)]
         public List<Instance> Instances { get; set; }
     }
 
