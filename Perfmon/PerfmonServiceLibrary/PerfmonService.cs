@@ -45,8 +45,22 @@ namespace PerfmonServiceLibrary
             return categories;
         }
 
-        public void Subscribe(string categoryName, string counterName)
+        public bool Subscribe(string categoryName, string counterName)
         {
+            try
+            {
+                if (!PerformanceCounterCategory.CounterExists(counterName, categoryName))
+                {
+                    // Counter does not exist
+                    return false;
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                // Category does not exist
+                return false;
+            }
+
             IPerfmonCallback callback = OperationContext.Current.GetCallbackChannel<IPerfmonCallback>();
             string key = string.Format(@"\{0}\{1}", categoryName, counterName);
 
@@ -69,6 +83,8 @@ namespace PerfmonServiceLibrary
                     activeCategories.Add(categoryName);
                 }
             }
+
+            return true;
         }
 
         public void Unsubscribe(string categoryName, string counterName)

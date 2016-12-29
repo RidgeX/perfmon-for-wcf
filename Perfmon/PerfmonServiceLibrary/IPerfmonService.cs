@@ -14,7 +14,7 @@ namespace PerfmonServiceLibrary
         CategoryList List();
 
         [OperationContract]
-        void Subscribe(string categoryName, string counterName);
+        bool Subscribe(string categoryName, string counterName);
 
         [OperationContract]
         void Unsubscribe(string categoryName, string counterName);
