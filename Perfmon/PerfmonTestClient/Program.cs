@@ -49,6 +49,7 @@ namespace PerfmonTestClient
             */
 
             service.Subscribe("Processor", "% Processor Time");
+            //service.Subscribe("Memory", "Available MBytes");
             Console.ReadLine();
         }
     }

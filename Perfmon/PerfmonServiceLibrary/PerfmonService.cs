@@ -13,12 +13,14 @@ namespace PerfmonServiceLibrary
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
     public class PerfmonService : IPerfmonService
     {
+        private static readonly HashSet<string> activeCategories;
         private static readonly object _lock;
         private static readonly Dictionary<string, CounterSample> prevSamples;
         private static readonly Dictionary<string, List<IPerfmonCallback>> subscribers;
 
         static PerfmonService()
         {
+            activeCategories = new HashSet<string>();
             _lock = new object();
             prevSamples = new Dictionary<string, CounterSample>();
             subscribers = new Dictionary<string, List<IPerfmonCallback>>();
@@ -56,6 +58,7 @@ namespace PerfmonServiceLibrary
                     if (!list.Contains(callback))
                     {
                         list.Add(callback);
+                        activeCategories.Add(categoryName);
                     }
                 }
                 else
@@ -63,6 +66,7 @@ namespace PerfmonServiceLibrary
                     list = new List<IPerfmonCallback>();
                     list.Add(callback);
                     subscribers.Add(key, list);
+                    activeCategories.Add(categoryName);
                 }
             }
         }
@@ -81,6 +85,7 @@ namespace PerfmonServiceLibrary
 
                     if (!list.Any())
                     {
+                        activeCategories.Remove(categoryName);
                         subscribers.Remove(key);
                     }
                 }
@@ -89,56 +94,60 @@ namespace PerfmonServiceLibrary
 
         public void Update()
         {
-            PerformanceCounterCategory pcc = new PerformanceCounterCategory("Processor");
-            InstanceDataCollectionCollection idcc = pcc.ReadCategory();
-
-            foreach (InstanceDataCollection idc in idcc.Values)
+            foreach (string categoryName in activeCategories)
             {
-                if (!idc.CounterName.Equals("% Processor Time")) continue;
+                PerformanceCounterCategory pcc = new PerformanceCounterCategory(categoryName);
+                InstanceDataCollectionCollection idcc = pcc.ReadCategory();
 
-                string key = string.Format(@"\{0}\{1}", pcc.CategoryName, idc.CounterName);
-                List<Instance> instances = new List<Instance>();
-                DateTime? timestamp = null;
-
-                foreach (InstanceData id in idc.Values)
+                foreach (InstanceDataCollection idc in idcc.Values)
                 {
-                    string path = string.Format(@"\{0}({1})\{2}", pcc.CategoryName, id.InstanceName, idc.CounterName);
+                    string counterName = idc.CounterName;
+                    string key = string.Format(@"\{0}\{1}", categoryName, counterName);
 
-                    CounterSample prevSample;
-                    if (!prevSamples.TryGetValue(path, out prevSample))
+                    lock (_lock)
                     {
-                        prevSample = CounterSample.Empty;
-                    }
-                    CounterSample sample = id.Sample;
-                    float value = CounterSample.Calculate(prevSample, sample);
-                    prevSamples[path] = sample;
-
-                    if (timestamp == null)
-                    {
-                        timestamp = DateTime.FromFileTime(sample.TimeStamp100nSec);
-                    }
-
-                    instances.Add(new Instance() { Name = id.InstanceName, Value = value });
-                }
-
-                if (instances.Count == 0) continue;
-
-                Counter counter = new Counter() { Name = idc.CounterName, Instances = instances };
-                Category category = new Category() { Name = pcc.CategoryName, Counters = new List<Counter>() { counter } };
-                EventData e = new EventData() { Category = category, Timestamp = timestamp.Value };
-
-                lock (_lock)
-                {
-                    List<IPerfmonCallback> list;
-                    if (subscribers.TryGetValue(key, out list))
-                    {
-                        ThreadPool.QueueUserWorkItem(_ =>
+                        List<IPerfmonCallback> list;
+                        if (subscribers.TryGetValue(key, out list))
                         {
-                            Parallel.ForEach(list, subscriber =>
+                            List<Instance> instances = new List<Instance>();
+                            DateTime? timestamp = null;
+
+                            foreach (InstanceData id in idc.Values)
                             {
-                                subscriber.OnNext(e);
+                                string instanceName = (pcc.CategoryType == PerformanceCounterCategoryType.MultiInstance ? id.InstanceName : "*");
+                                string path = string.Format(@"\{0}({1})\{2}", categoryName, instanceName, counterName);
+
+                                CounterSample prevSample;
+                                if (!prevSamples.TryGetValue(path, out prevSample))
+                                {
+                                    prevSample = CounterSample.Empty;
+                                }
+                                CounterSample sample = id.Sample;
+                                float value = CounterSample.Calculate(prevSample, sample);
+                                prevSamples[path] = sample;
+
+                                if (timestamp == null)
+                                {
+                                    timestamp = DateTime.FromFileTime(sample.TimeStamp100nSec);
+                                }
+
+                                instances.Add(new Instance() { Name = instanceName, Value = value });
+                            }
+
+                            if (instances.Count == 0) continue;
+
+                            Counter counter = new Counter() { Name = counterName, Instances = instances };
+                            Category category = new Category() { Name = categoryName, Counters = new List<Counter>() { counter } };
+                            EventData e = new EventData() { Category = category, Timestamp = timestamp.Value };
+
+                            ThreadPool.QueueUserWorkItem(_ =>
+                            {
+                                Parallel.ForEach(list, subscriber =>
+                                {
+                                    subscriber.OnNext(e);
+                                });
                             });
-                        });
+                        }
                     }
                 }
             }
