@@ -29,10 +29,10 @@ namespace PerfmonServiceLibrary
     [DataContract]
     public class EventData
     {
-        [DataMember]
+        [DataMember(Order = 0)]
         public Category Category { get; set; }
 
-        [DataMember]
+        [DataMember(Order = 1)]
         public DateTime Timestamp { get; set; }
     }
 
@@ -42,30 +42,30 @@ namespace PerfmonServiceLibrary
     [DataContract]
     public class Category
     {
-        [DataMember]
+        [DataMember(Order = 0)]
         public string Name { get; set; }
 
-        [DataMember]
+        [DataMember(Order = 1)]
         public List<Counter> Counters { get; set; }
     }
 
     [DataContract]
     public class Counter
     {
-        [DataMember]
+        [DataMember(Order = 0)]
         public string Name { get; set; }
 
-        [DataMember]
+        [DataMember(Order = 1)]
         public List<Instance> Instances { get; set; }
     }
 
     [DataContract]
     public class Instance
     {
-        [DataMember]
+        [DataMember(Order = 0)]
         public string Name { get; set; }
 
-        [DataMember]
+        [DataMember(Order = 1)]
         public float Value { get; set; }
     }
 }
