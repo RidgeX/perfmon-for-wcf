@@ -74,8 +74,14 @@ namespace PerfmonServiceHost
                 timer.Elapsed += (s, e) => service.Update();
                 timer.Start();
 
-                Console.WriteLine("Press <Enter> to terminate service.");
-                Console.ReadLine();
+                Console.WriteLine("Press <Ctrl+C> to terminate service.");
+                ManualResetEvent quitEvent = new ManualResetEvent(false);
+                Console.CancelKeyPress += (s, e) =>
+                {
+                    quitEvent.Set();
+                    e.Cancel = true;
+                };
+                quitEvent.WaitOne();
 
                 timer.Stop();
 
