@@ -69,14 +69,17 @@ namespace PerfmonServiceHost
 
                 selfHost.Open();
 
-                bool running = true;
+                var timer = new System.Timers.Timer();
+                timer.Interval = 1000;
+                timer.Elapsed += (s, e) => service.Update();
+                timer.Start();
 
-                while (running)
-                {
-                    service.Update();
-                    Thread.Sleep(1000);
-                }
+                Console.WriteLine("Press <Enter> to terminate service.");
+                Console.ReadLine();
 
+                timer.Stop();
+
+                Console.WriteLine("Closing connections, please wait...");
                 selfHost.Close();
             }
             catch (CommunicationException ce)
