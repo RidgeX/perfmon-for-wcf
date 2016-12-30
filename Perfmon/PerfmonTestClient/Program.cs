@@ -32,10 +32,10 @@ namespace PerfmonTestClient
         public static void Main(string[] args)
         {
             Callback callback = new Callback();
-            WSDualHttpBinding binding = new WSDualHttpBinding();
+            NetTcpBinding binding = new NetTcpBinding();
             binding.MaxReceivedMessageSize = int.MaxValue;
-            binding.Security.Mode = WSDualHttpSecurityMode.None;
-            string address = "http://localhost:8080/Perfmon/";
+            binding.Security.Mode = SecurityMode.None;
+            string address = "net.tcp://localhost:8080/Perfmon/";
             DuplexChannelFactory<IPerfmonService> factory = new DuplexChannelFactory<IPerfmonService>(callback, binding, address);
             IPerfmonService service = factory.CreateChannel();
 
