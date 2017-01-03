@@ -10,8 +10,18 @@ namespace PerfmonClient.Model
 {
     public abstract class Item : INotifyPropertyChanged
     {
+        private bool isExpanded;
         private bool isSelected;
 
+        public bool IsExpanded
+        {
+            get { return isExpanded; }
+            set
+            {
+                isExpanded = value;
+                OnPropertyChanged("IsExpanded");
+            }
+        }
         public bool IsSelected
         {
             get { return isSelected; }

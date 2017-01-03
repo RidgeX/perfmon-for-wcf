@@ -84,10 +84,12 @@ namespace PerfmonClient
                             if (ci.IsChecked == true)
                             {
                                 Service.Subscribe(category.Name, counter.Name);
+                                ci.IsExpanded = true;
                             }
                             else
                             {
                                 Service.Unsubscribe(category.Name, counter.Name);
+                                ci.IsExpanded = false;
                                 ci.InstanceItems.Clear();
                             }
                         }
