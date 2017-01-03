@@ -236,7 +236,8 @@ namespace PerfmonClient
 
         private void editTabMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            var tab = (Tab) tabControl.SelectedItem;
+            var tab = (Tab) (e.OriginalSource as MenuItem).DataContext;
+            if (tab == null) return;
 
             NewTabDialog dialog = new NewTabDialog();
             dialog.Title = "Edit Tab";
@@ -264,7 +265,19 @@ namespace PerfmonClient
 
         private void closeTabMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            var tab = (Tab) tabControl.SelectedItem;
+            Tab tab;
+
+            if (e.OriginalSource is MenuItem && (e.OriginalSource as MenuItem).DataContext is Tab)
+            {
+                // Close the tab which this menu belongs to
+                tab = (Tab) (e.OriginalSource as MenuItem).DataContext;
+            }
+            else
+            {
+                // Close the currently open tab (event called from File menu)
+                tab = (Tab) tabControl.SelectedItem;
+            }
+
             if (tab == null) return;
 
             if (MessageBox.Show(string.Format("Are you sure you want to close \"{0}\"?", tab.Name), "Close Tab",
