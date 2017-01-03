@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,7 +12,6 @@ namespace PerfmonClient.Model
     {
         private bool isSelected;
 
-        public string Name { get; set; }
         public bool IsSelected
         {
             get { return isSelected; }
@@ -37,32 +35,23 @@ namespace PerfmonClient.Model
 
     public class CategoryItem : Item
     {
-        public ObservableCollection<InstanceItem> InstanceItems { get; set; }
-
-        public CategoryItem(string name, ObservableCollection<InstanceItem> instanceItems)
-        {
-            Name = name;
-            InstanceItems = instanceItems;
-        }
-    }
-
-    public class InstanceItem : Item
-    {
+        public string Name { get; set; }
         public ObservableCollection<CounterItem> CounterItems { get; set; }
 
-        public InstanceItem(string name, ObservableCollection<CounterItem> counterItems)
+        public CategoryItem(string name)
         {
             Name = name;
-            CounterItems = counterItems;
+            CounterItems = new ObservableCollection<CounterItem>();
         }
     }
 
     public class CounterItem : Item
     {
-        //private bool? isChecked;
+        private bool? isChecked;
 
-        public PerformanceCounter Counter { get; set; }
-        /*
+        public string Name { get; set; }
+        public CategoryItem Parent { get; set; }
+        public ObservableCollection<InstanceItem> InstanceItems { get; set; }
         public bool? IsChecked
         {
             get { return isChecked; }
@@ -72,13 +61,25 @@ namespace PerfmonClient.Model
                 OnPropertyChanged("IsChecked");
             }
         }
-        */
 
-        public CounterItem(string name, PerformanceCounter counter)
+        public CounterItem(string name, CategoryItem parent)
         {
             Name = name;
-            Counter = counter;
-            //IsChecked = false;
+            Parent = parent;
+            InstanceItems = new ObservableCollection<InstanceItem>();
+            IsChecked = false;
+        }
+    }
+
+    public class InstanceItem : Item
+    {
+        public string Name { get; set; }
+        public CounterItem Parent { get; set; }
+
+        public InstanceItem(string name, CounterItem parent)
+        {
+            Name = name;
+            Parent = parent;
         }
     }
 }

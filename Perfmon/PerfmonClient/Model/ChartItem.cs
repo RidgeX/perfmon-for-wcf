@@ -76,10 +76,10 @@ namespace PerfmonClient.Model
             }
         }
 
-        public void SetAxisLimits(DateTime now)
+        public void SetAxisLimits(DateTime timestamp)
         {
-            AxisMax = now.Ticks + TimeSpan.FromSeconds(1).Ticks;
-            AxisMin = now.Ticks - TimeSpan.FromSeconds(8).Ticks;
+            AxisMax = timestamp.Ticks + TimeSpan.FromSeconds(1).Ticks;
+            AxisMin = timestamp.Ticks - TimeSpan.FromSeconds(8).Ticks;
         }
 
         #region Serialization
@@ -108,11 +108,11 @@ namespace PerfmonClient.Model
                         var fillBrush = (SolidColorBrush) brushes[1];
 
                         string categoryName = reader.GetAttribute("CategoryName");
-                        string instanceName = reader.GetAttribute("InstanceName");
                         string counterName = reader.GetAttribute("CounterName");
-                        CounterItem counterItem = mainWindow.FindCounterItem(categoryName, instanceName, counterName);
+                        string instanceName = reader.GetAttribute("InstanceName");
+                        InstanceItem instanceItem = mainWindow.FindInstanceItem(categoryName, counterName, instanceName);
 
-                        if (counterItem == null)
+                        if (instanceItem == null)
                         {
                             MessageBox.Show(string.Format("The following counter could not be found:\n\\{0}({1})\\{2}",
                                 categoryName, instanceName, counterName), "Load Tab",
@@ -132,7 +132,7 @@ namespace PerfmonClient.Model
                         };
 
                         SeriesCollection.Add(series);
-                        mainWindow.AddCounterListener(counterItem, series);
+                        mainWindow.AddCounterListener(instanceItem, series);
 
                         reader.Read();
                     }
@@ -159,10 +159,10 @@ namespace PerfmonClient.Model
                 var color = (Color) brushConverter.Convert(new object[] { series.Stroke, series.Fill }, typeof(Color), null, CultureInfo.InvariantCulture);
                 writer.WriteAttributeString("Color", color.ToString());
 
-                PerformanceCounter counter = mainWindow.CounterListeners.Where(kvp => kvp.Value.Contains(series)).Select(kvp => kvp.Key.Counter).FirstOrDefault();
-                writer.WriteAttributeString("CategoryName", counter.CategoryName);
-                writer.WriteAttributeString("InstanceName", string.IsNullOrEmpty(counter.InstanceName) ? "*" : counter.InstanceName);
-                writer.WriteAttributeString("CounterName", counter.CounterName);
+                InstanceItem instanceItem = mainWindow.CounterListeners.Where(kvp => kvp.Value.Contains(series)).Select(kvp => kvp.Key).First();
+                writer.WriteAttributeString("CategoryName", instanceItem.Parent.Parent.Name);
+                writer.WriteAttributeString("CounterName", instanceItem.Parent.Name);
+                writer.WriteAttributeString("InstanceName", instanceItem.Name);
 
                 writer.WriteEndElement();
             }

@@ -8,7 +8,8 @@
         xmlns:model="clr-namespace:PerfmonClient.Model"
         xmlns:ui="clr-namespace:PerfmonClient.UI"
         mc:Ignorable="d"
-        Title="Performance Monitor" Width="1024" Height="576">
+        Title="Performance Monitor" Width="1024" Height="576"
+        Closing="Window_Closing">
     <Window.CommandBindings>
         <CommandBinding Command="local:CustomCommands.NewTab" Executed="newTabMenuItem_Click" />
         <CommandBinding Command="local:CustomCommands.SaveTab" Executed="saveTabMenuItem_Click" />
@@ -106,17 +107,17 @@
                     </Style>
                 </TreeView.ItemContainerStyle>
                 <TreeView.Resources>
-                    <HierarchicalDataTemplate DataType="{x:Type model:CategoryItem}" ItemsSource="{Binding InstanceItems}">
+                    <HierarchicalDataTemplate DataType="{x:Type model:CategoryItem}" ItemsSource="{Binding CounterItems}">
                         <TextBlock Text="{Binding Name}" />
                     </HierarchicalDataTemplate>
-                    <HierarchicalDataTemplate DataType="{x:Type model:InstanceItem}" ItemsSource="{Binding CounterItems}">
-                        <TextBlock Text="{Binding Name}" />
-                    </HierarchicalDataTemplate>
-                    <DataTemplate DataType="{x:Type model:CounterItem}">
+                    <HierarchicalDataTemplate DataType="{x:Type model:CounterItem}" ItemsSource="{Binding InstanceItems}">
                         <StackPanel Orientation="Horizontal">
-                            <!-- <CheckBox IsChecked="{Binding IsChecked}" Margin="0,0,3,0" /> -->
+                            <CheckBox IsChecked="{Binding IsChecked}" Margin="0,0,3,0" />
                             <TextBlock Text="{Binding Name}" />
                         </StackPanel>
+                    </HierarchicalDataTemplate>
+                    <DataTemplate DataType="{x:Type model:InstanceItem}">
+                        <TextBlock Text="{Binding Name}" />
                     </DataTemplate>
                 </TreeView.Resources>
             </TreeView>

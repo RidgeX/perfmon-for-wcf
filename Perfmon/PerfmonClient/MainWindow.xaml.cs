@@ -4,12 +4,14 @@ using LiveCharts.Wpf;
 using Microsoft.Win32;
 using PerfmonClient.Model;
 using PerfmonClient.UI;
+using PerfmonServiceLibrary;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -37,12 +39,12 @@ namespace PerfmonClient
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IPerfmonCallback
     {
+        public IPerfmonService Service { get; set; }
         public ObservableCollection<CategoryItem> CategoryItems { get; set; }
-        public Dictionary<CounterItem, List<Series>> CounterListeners { get; set; }
+        public Dictionary<InstanceItem, List<Series>> CounterListeners { get; set; }
         public ObservableCollection<Tab> Tabs { get; set; }
-        public DispatcherTimer Timer { get; set; }
 
         public MainWindow()
         {
@@ -54,56 +56,102 @@ namespace PerfmonClient
                 .Y(model => model.Value);
             Charting.For<MeasureModel>(mapper);
 
-            CategoryItems = new ObservableCollection<CategoryItem>();
-            CategoryItems.Add(MakeCategoryItem("Memory"));
-            CategoryItems.Add(MakeCategoryItem("Processor"));
-            CategoryItems.Add(MakeCategoryItem("ServiceModelEndpoint 4.0.0.0"));
-            CategoryItems.Add(MakeCategoryItem("ServiceModelOperation 4.0.0.0"));
-            CategoryItems.Add(MakeCategoryItem("ServiceModelService 4.0.0.0"));
-            CategoryItems.Add(MakeCategoryItem("Test category"));
+            NetTcpBinding binding = new NetTcpBinding();
+            binding.MaxReceivedMessageSize = int.MaxValue;
+            binding.Security.Mode = SecurityMode.None;
+            string address = "net.tcp://localhost:8080/Perfmon/";
+            DuplexChannelFactory<IPerfmonService> factory = new DuplexChannelFactory<IPerfmonService>(this, binding, address);
+            Service = factory.CreateChannel();
+            CategoryList categories = Service.List();
+            categories.Sort((a, b) => a.Name.CompareTo(b.Name));
 
-            CounterListeners = new Dictionary<CounterItem, List<Series>>();
+            CategoryItems = new ObservableCollection<CategoryItem>();
+
+            foreach (Category category in categories)
+            {
+                CategoryItem categoryItem = new CategoryItem(category.Name);
+
+                foreach (Counter counter in category.Counters)
+                {
+                    CounterItem counterItem = new CounterItem(counter.Name, categoryItem);
+
+                    counterItem.PropertyChanged += (s, e) =>
+                    {
+                        if (e.PropertyName == "IsChecked")
+                        {
+                            CounterItem ci = (CounterItem) s;
+
+                            if (ci.IsChecked == true)
+                            {
+                                Service.Subscribe(category.Name, counter.Name);
+                            }
+                            else
+                            {
+                                Service.Unsubscribe(category.Name, counter.Name);
+                                ci.InstanceItems.Clear();
+                            }
+                        }
+                    };
+
+                    categoryItem.CounterItems.Add(counterItem);
+                }
+
+                CategoryItems.Add(categoryItem);
+            }
+
+            CounterListeners = new Dictionary<InstanceItem, List<Series>>();
 
             Tabs = new ObservableCollection<Tab>();
             Tab tab = new Tab("Default", 2, 2);
             Tabs.Add(tab);
             tabControl.SelectedItem = tab;
-
-            Timer = new DispatcherTimer()
-            {
-                Interval = TimeSpan.FromMilliseconds(500)
-            };
-            Timer.Tick += Timer_Tick;
-            Timer.Start();
         }
 
-        private void Timer_Tick(object sender, EventArgs e)
+        public void OnNext(EventData e)
         {
-            foreach (var kvp in CounterListeners)
+            Category category = e.Category;
+            DateTime timestamp = e.Timestamp;
+
+            CategoryItem categoryItem = CategoryItems.FirstOrDefault(item => item.Name == category.Name);
+            if (categoryItem == null) return;
+
+            foreach (Counter counter in category.Counters)
             {
-                CounterItem counterItem = kvp.Key;
-                List<Series> listeners = kvp.Value;
+                CounterItem counterItem = categoryItem.CounterItems.FirstOrDefault(item => item.Name == counter.Name);
+                if (counterItem == null) continue;
 
-                var now = DateTime.Now;
-                var value = counterItem.Counter.NextValue();
-
-                foreach (Series series in listeners)
+                foreach (Instance instance in counter.Instances)
                 {
-                    series.Values.Add(new MeasureModel(now, value));
+                    InstanceItem instanceItem = counterItem.InstanceItems.FirstOrDefault(item => item.Name == instance.Name);
 
-                    if (series.DataContext != BindingOperations.DisconnectedSource)
+                    if (instanceItem == null)
                     {
-                        var chartItem = (ChartItem) series.DataContext;
-
-                        if (chartItem != null)
-                        {
-                            chartItem.SetAxisLimits(now);
-                        }
+                        instanceItem = new InstanceItem(instance.Name, counterItem);
+                        counterItem.InstanceItems.Add(instanceItem);
                     }
 
-                    if (series.Values.Count > 30)
+                    List<Series> listeners;
+                    if (CounterListeners.TryGetValue(instanceItem, out listeners))
                     {
-                        series.Values.RemoveAt(0);
+                        foreach (Series series in listeners)
+                        {
+                            series.Values.Add(new MeasureModel(timestamp, instance.Value));
+
+                            if (series.DataContext != BindingOperations.DisconnectedSource)
+                            {
+                                var chartItem = (ChartItem) series.DataContext;
+
+                                if (chartItem != null)
+                                {
+                                    chartItem.SetAxisLimits(timestamp);
+                                }
+                            }
+
+                            if (series.Values.Count > 30)
+                            {
+                                series.Values.RemoveAt(0);
+                            }
+                        }
                     }
                 }
             }
@@ -234,6 +282,11 @@ namespace PerfmonClient
             Close();
         }
 
+        private void Window_Closing(object sender, CancelEventArgs e)
+        {
+            ((IClientChannel) Service).Close();
+        }
+
         private void treeView_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             var item = (Item) treeView.SelectedItem;
@@ -256,7 +309,7 @@ namespace PerfmonClient
         {
             var item = (Item) treeView.SelectedItem;
 
-            if (item != null && item is CounterItem && e.LeftButton == MouseButtonState.Pressed)
+            if (item != null && item is InstanceItem && e.LeftButton == MouseButtonState.Pressed)
             {
                 Vector offset = e.GetPosition(null) - dragStart;
 
@@ -266,7 +319,7 @@ namespace PerfmonClient
                     Window mainWindow = Application.Current.MainWindow;
                     mainWindow.AllowDrop = true;
 
-                    var template = new DataTemplate(typeof(CounterItem));
+                    var template = new DataTemplate(typeof(InstanceItem));
                     var textBlock = new FrameworkElementFactory(typeof(TextBlock));
                     textBlock.SetBinding(TextBlock.TextProperty, new Binding("Name"));
                     template.VisualTree = textBlock;
@@ -276,7 +329,7 @@ namespace PerfmonClient
 
                     mainWindow.PreviewDragOver += MainWindow_PreviewDragOver;
 
-                    DataObject data = new DataObject(typeof(CounterItem), item);
+                    DataObject data = new DataObject(typeof(InstanceItem), item);
                     DragDrop.DoDragDrop(treeView, data, DragDropEffects.Move);
 
                     mainWindow.PreviewDragOver -= MainWindow_PreviewDragOver;
@@ -294,21 +347,21 @@ namespace PerfmonClient
 
         private void CartesianChart_Drop(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent(typeof(CounterItem)))
+            if (e.Data.GetDataPresent(typeof(InstanceItem)))
             {
-                var counterItem = (CounterItem) e.Data.GetData(typeof(CounterItem));
+                var instanceItem = (InstanceItem) e.Data.GetData(typeof(InstanceItem));
                 var chart = (CartesianChart) sender;
 
                 LineSeries series = new LineSeries()
                 {
                     PointGeometrySize = 9,
                     StrokeThickness = 2,
-                    Title = counterItem.Name,
+                    Title = instanceItem.Name,
                     Values = new ChartValues<MeasureModel>()
                 };
 
                 chart.Series.Add(series);
-                AddCounterListener(counterItem, series);
+                AddCounterListener(instanceItem, series);
             }
         }
 
@@ -334,57 +387,13 @@ namespace PerfmonClient
             }
         }
 
-        private CategoryItem MakeCategoryItem(string categoryName)
-        {
-            var instanceItems = new ObservableCollection<InstanceItem>();
-            var category = PerformanceCounterCategory.GetCategories().First(c => c.CategoryName == categoryName);
-
-            string[] instanceNames = category.GetInstanceNames();
-            Array.Sort(instanceNames);
-
-            if (category.CategoryType == PerformanceCounterCategoryType.MultiInstance)
-            {
-                foreach (string instanceName in instanceNames)
-                {
-                    if (category.InstanceExists(instanceName))
-                    {
-                        instanceItems.Add(MakeInstanceItem(instanceName, category.GetCounters(instanceName)));
-                    }
-                }
-            }
-            else
-            {
-                instanceItems.Add(MakeInstanceItem("*", category.GetCounters()));
-            }
-
-            return new CategoryItem(categoryName, instanceItems);
-        }
-
-        private InstanceItem MakeInstanceItem(string instanceName, PerformanceCounter[] counters)
-        {
-            var counterItems = new ObservableCollection<CounterItem>();
-
-            foreach (PerformanceCounter counter in counters)
-            {
-                counterItems.Add(MakeCounterItem(counter.CounterName, counter));
-            }
-
-            return new InstanceItem(instanceName, counterItems);
-        }
-
-        private CounterItem MakeCounterItem(string counterName, PerformanceCounter counter)
-        {
-            CounterItem counterItem = new CounterItem(counterName, counter);
-            return counterItem;
-        }
-
-        public void AddCounterListener(CounterItem counterItem, Series series)
+        public void AddCounterListener(InstanceItem instanceItem, Series series)
         {
             List<Series> listeners;
-            if (!CounterListeners.TryGetValue(counterItem, out listeners))
+            if (!CounterListeners.TryGetValue(instanceItem, out listeners))
             {
                 listeners = new List<Series>();
-                CounterListeners.Add(counterItem, listeners);
+                CounterListeners.Add(instanceItem, listeners);
             }
             listeners.Add(series);
         }
@@ -393,26 +402,26 @@ namespace PerfmonClient
         {
             foreach (var kvp in CounterListeners.ToList())
             {
-                CounterItem counterItem = kvp.Key;
+                InstanceItem instanceItem = kvp.Key;
                 List<Series> listeners = kvp.Value;
 
                 listeners.Remove(series);
 
                 if (!listeners.Any())
                 {
-                    CounterListeners.Remove(counterItem);
+                    CounterListeners.Remove(instanceItem);
                 }
             }
         }
 
-        public CounterItem FindCounterItem(string categoryName, string instanceName, string counterName)
+        public InstanceItem FindInstanceItem(string categoryName, string counterName, string instanceName)
         {
             CategoryItem categoryItem = CategoryItems.FirstOrDefault(item => item.Name == categoryName);
             if (categoryItem == null) return null;
-            InstanceItem instanceItem = categoryItem.InstanceItems.FirstOrDefault(item => item.Name == instanceName);
-            if (instanceItem == null) return null;
-            CounterItem counterItem = instanceItem.CounterItems.FirstOrDefault(item => item.Name == counterName);
-            return counterItem;
+            CounterItem counterItem = categoryItem.CounterItems.FirstOrDefault(item => item.Name == counterName);
+            if (counterItem == null) return null;
+            InstanceItem instanceItem = counterItem.InstanceItems.FirstOrDefault(item => item.Name == instanceName);
+            return instanceItem;
         }
     }
 }
