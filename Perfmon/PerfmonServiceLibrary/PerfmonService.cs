@@ -110,18 +110,18 @@ namespace PerfmonServiceLibrary
 
         public void Update()
         {
-            foreach (string categoryName in activeCategories)
+            lock (_lock)
             {
-                PerformanceCounterCategory pcc = new PerformanceCounterCategory(categoryName);
-                InstanceDataCollectionCollection idcc = pcc.ReadCategory();
-
-                foreach (InstanceDataCollection idc in idcc.Values)
+                foreach (string categoryName in activeCategories)
                 {
-                    string counterName = idc.CounterName;
-                    string key = string.Format(@"\{0}\{1}", categoryName, counterName);
+                    PerformanceCounterCategory pcc = new PerformanceCounterCategory(categoryName);
+                    InstanceDataCollectionCollection idcc = pcc.ReadCategory();
 
-                    lock (_lock)
+                    foreach (InstanceDataCollection idc in idcc.Values)
                     {
+                        string counterName = idc.CounterName;
+                        string key = string.Format(@"\{0}\{1}", categoryName, counterName);
+
                         List<IPerfmonCallback> list;
                         if (subscribers.TryGetValue(key, out list))
                         {
