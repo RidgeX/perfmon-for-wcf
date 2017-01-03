@@ -28,6 +28,10 @@ namespace PerfmonServiceLibrary
 
         public CategoryList List()
         {
+            #if DEBUG
+            Console.WriteLine("List()");
+            #endif
+
             CategoryList categories = new CategoryList();
 
             foreach (var category in PerformanceCounterCategory.GetCategories())
@@ -47,6 +51,10 @@ namespace PerfmonServiceLibrary
 
         public bool Subscribe(string categoryName, string counterName)
         {
+            #if DEBUG
+            Console.WriteLine("Subscribe({0}, {1})", categoryName, counterName);
+            #endif
+
             try
             {
                 if (!PerformanceCounterCategory.CounterExists(counterName, categoryName))
@@ -89,6 +97,10 @@ namespace PerfmonServiceLibrary
 
         public void Unsubscribe(string categoryName, string counterName)
         {
+            #if DEBUG
+            Console.WriteLine("Unsubscribe({0}, {1})", categoryName, counterName);
+            #endif
+
             IPerfmonCallback callback = OperationContext.Current.GetCallbackChannel<IPerfmonCallback>();
             RemoveClient(categoryName, counterName, callback);
         }
