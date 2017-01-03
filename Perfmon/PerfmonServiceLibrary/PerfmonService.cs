@@ -13,6 +13,15 @@ namespace PerfmonServiceLibrary
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
     public class PerfmonService : IPerfmonService
     {
+        private static readonly string[] allowedCategories =
+        {
+            "Memory",
+            "Processor",
+            "ServiceModelEndpoint 4.0.0.0",
+            "ServiceModelOperation 4.0.0.0",
+            "ServiceModelService 4.0.0.0"
+        };
+
         private static readonly HashSet<string> activeCategories;
         private static readonly object _lock;
         private static readonly Dictionary<string, CounterSample> prevSamples;
@@ -36,6 +45,8 @@ namespace PerfmonServiceLibrary
 
             foreach (var category in PerformanceCounterCategory.GetCategories())
             {
+                if (!allowedCategories.Contains(category.CategoryName)) continue;
+
                 List<Counter> counters = new List<Counter>();
 
                 foreach (var counter in category.GetCounters(string.Empty))
@@ -55,11 +66,15 @@ namespace PerfmonServiceLibrary
             Console.WriteLine("Subscribe({0}, {1})", categoryName, counterName);
             #endif
 
+            if (!allowedCategories.Contains(categoryName))
+            {
+                return false;
+            }
+
             try
             {
                 if (!PerformanceCounterCategory.CounterExists(counterName, categoryName))
                 {
-                    // Counter does not exist
                     return false;
                 }
             }
