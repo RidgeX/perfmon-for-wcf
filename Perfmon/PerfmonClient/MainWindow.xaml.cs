@@ -342,7 +342,7 @@ namespace PerfmonClient
             string[] instanceNames = category.GetInstanceNames();
             Array.Sort(instanceNames);
 
-            if (instanceNames.Any())
+            if (category.CategoryType == PerformanceCounterCategoryType.MultiInstance)
             {
                 foreach (string instanceName in instanceNames)
                 {
