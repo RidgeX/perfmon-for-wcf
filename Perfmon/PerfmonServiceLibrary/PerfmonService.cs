@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace PerfmonServiceLibrary
 {
-    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
     public class PerfmonService : IPerfmonService
     {
         private static readonly HashSet<string> activeCategories;
