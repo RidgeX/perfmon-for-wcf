@@ -308,14 +308,7 @@ namespace PerfmonClient
                 };
 
                 chart.Series.Add(series);
-
-                List<Series> listeners;
-                if (!CounterListeners.TryGetValue(counterItem, out listeners))
-                {
-                    listeners = new List<Series>();
-                    CounterListeners.Add(counterItem, listeners);
-                }
-                listeners.Add(series);
+                AddCounterListener(counterItem, series);
             }
         }
 
@@ -336,19 +329,7 @@ namespace PerfmonClient
             {
                 var series = (Series) chart.Series.Last();
 
-                foreach (var kvp in CounterListeners.ToList())
-                {
-                    CounterItem counterItem = kvp.Key;
-                    List<Series> listeners = kvp.Value;
-
-                    listeners.Remove(series);
-
-                    if (!listeners.Any())
-                    {
-                        CounterListeners.Remove(counterItem);
-                    }
-                }
-
+                RemoveCounterListener(series);
                 chart.Series.Remove(series);
             }
         }
@@ -395,6 +376,33 @@ namespace PerfmonClient
         {
             CounterItem counterItem = new CounterItem(counterName, counter);
             return counterItem;
+        }
+
+        public void AddCounterListener(CounterItem counterItem, Series series)
+        {
+            List<Series> listeners;
+            if (!CounterListeners.TryGetValue(counterItem, out listeners))
+            {
+                listeners = new List<Series>();
+                CounterListeners.Add(counterItem, listeners);
+            }
+            listeners.Add(series);
+        }
+
+        public void RemoveCounterListener(Series series)
+        {
+            foreach (var kvp in CounterListeners.ToList())
+            {
+                CounterItem counterItem = kvp.Key;
+                List<Series> listeners = kvp.Value;
+
+                listeners.Remove(series);
+
+                if (!listeners.Any())
+                {
+                    CounterListeners.Remove(counterItem);
+                }
+            }
         }
 
         public CounterItem FindCounterItem(string categoryName, string instanceName, string counterName)

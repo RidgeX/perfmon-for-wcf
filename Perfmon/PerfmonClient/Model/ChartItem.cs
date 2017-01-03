@@ -132,14 +132,7 @@ namespace PerfmonClient.Model
                         };
 
                         SeriesCollection.Add(series);
-
-                        List<Series> listeners;
-                        if (!mainWindow.CounterListeners.TryGetValue(counterItem, out listeners))
-                        {
-                            listeners = new List<Series>();
-                            mainWindow.CounterListeners.Add(counterItem, listeners);
-                        }
-                        listeners.Add(series);
+                        mainWindow.AddCounterListener(counterItem, series);
 
                         reader.Read();
                     }
