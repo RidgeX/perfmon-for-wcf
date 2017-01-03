@@ -40,7 +40,7 @@ namespace PerfmonClient
     public partial class MainWindow : Window
     {
         public ObservableCollection<CategoryItem> CategoryItems { get; set; }
-        public Dictionary<Series, CounterItem> CounterSource { get; set; }
+        public Dictionary<CounterItem, List<Series>> CounterListeners { get; set; }
         public ObservableCollection<Tab> Tabs { get; set; }
         public DispatcherTimer Timer { get; set; }
 
@@ -62,7 +62,7 @@ namespace PerfmonClient
             CategoryItems.Add(MakeCategoryItem("ServiceModelService 4.0.0.0"));
             CategoryItems.Add(MakeCategoryItem("Test category"));
 
-            CounterSource = new Dictionary<Series, CounterItem>();
+            CounterListeners = new Dictionary<CounterItem, List<Series>>();
 
             Tabs = new ObservableCollection<Tab>();
             Tab tab = new Tab("Default", 2, 2);
@@ -79,24 +79,31 @@ namespace PerfmonClient
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            var now = DateTime.Now;
-
-            foreach (Tab tab in Tabs)
+            foreach (var kvp in CounterListeners)
             {
-                foreach (ChartItem chartItem in tab.ChartItems)
+                CounterItem counterItem = kvp.Key;
+                List<Series> listeners = kvp.Value;
+
+                var now = DateTime.Now;
+                var value = counterItem.Counter.NextValue();
+
+                foreach (Series series in listeners)
                 {
-                    foreach (Series series in chartItem.SeriesCollection)
+                    series.Values.Add(new MeasureModel(now, value));
+
+                    if (series.DataContext != BindingOperations.DisconnectedSource)
                     {
-                        IChartValues values = series.Values;
+                        var chartItem = (ChartItem) series.DataContext;
 
-                        values.Add(new MeasureModel()
+                        if (chartItem != null)
                         {
-                            DateTime = now,
-                            Value = CounterSource[series].Counter.NextValue()
-                        });
-                        chartItem.SetAxisLimits(now);
+                            chartItem.SetAxisLimits(now);
+                        }
+                    }
 
-                        if (values.Count > 30) values.RemoveAt(0);
+                    if (series.Values.Count > 30)
+                    {
+                        series.Values.RemoveAt(0);
                     }
                 }
             }
@@ -289,18 +296,26 @@ namespace PerfmonClient
         {
             if (e.Data.GetDataPresent(typeof(CounterItem)))
             {
-                var item = (CounterItem) e.Data.GetData(typeof(CounterItem));
+                var counterItem = (CounterItem) e.Data.GetData(typeof(CounterItem));
                 var chart = (CartesianChart) sender;
 
                 LineSeries series = new LineSeries()
                 {
                     PointGeometrySize = 9,
                     StrokeThickness = 2,
-                    Title = item.Name,
+                    Title = counterItem.Name,
                     Values = new ChartValues<MeasureModel>()
                 };
+
                 chart.Series.Add(series);
-                CounterSource.Add(series, item);
+
+                List<Series> listeners;
+                if (!CounterListeners.TryGetValue(counterItem, out listeners))
+                {
+                    listeners = new List<Series>();
+                    CounterListeners.Add(counterItem, listeners);
+                }
+                listeners.Add(series);
             }
         }
 
@@ -320,7 +335,20 @@ namespace PerfmonClient
             if (chart.Series.Any())
             {
                 var series = (Series) chart.Series.Last();
-                CounterSource.Remove(series);
+
+                foreach (var kvp in CounterListeners.ToList())
+                {
+                    CounterItem counterItem = kvp.Key;
+                    List<Series> listeners = kvp.Value;
+
+                    listeners.Remove(series);
+
+                    if (!listeners.Any())
+                    {
+                        CounterListeners.Remove(counterItem);
+                    }
+                }
+
                 chart.Series.Remove(series);
             }
         }

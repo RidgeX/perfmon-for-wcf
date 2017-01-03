@@ -92,7 +92,18 @@ namespace PerfmonClient.Model
             {
                 foreach (Series series in chartItem.SeriesCollection)
                 {
-                    mainWindow.CounterSource.Remove(series);
+                    foreach (var kvp in mainWindow.CounterListeners.ToList())
+                    {
+                        CounterItem counterItem = kvp.Key;
+                        List<Series> listeners = kvp.Value;
+
+                        listeners.Remove(series);
+
+                        if (!listeners.Any())
+                        {
+                            mainWindow.CounterListeners.Remove(counterItem);
+                        }
+                    }
                 }
             }
 

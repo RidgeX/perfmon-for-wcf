@@ -130,8 +130,16 @@ namespace PerfmonClient.Model
                             Fill = fillBrush,
                             Values = new ChartValues<MeasureModel>()
                         };
+
                         SeriesCollection.Add(series);
-                        mainWindow.CounterSource.Add(series, counterItem);
+
+                        List<Series> listeners;
+                        if (!mainWindow.CounterListeners.TryGetValue(counterItem, out listeners))
+                        {
+                            listeners = new List<Series>();
+                            mainWindow.CounterListeners.Add(counterItem, listeners);
+                        }
+                        listeners.Add(series);
 
                         reader.Read();
                     }
@@ -158,7 +166,7 @@ namespace PerfmonClient.Model
                 var color = (Color) brushConverter.Convert(new object[] { series.Stroke, series.Fill }, typeof(Color), null, CultureInfo.InvariantCulture);
                 writer.WriteAttributeString("Color", color.ToString());
 
-                PerformanceCounter counter = mainWindow.CounterSource[series].Counter;
+                PerformanceCounter counter = mainWindow.CounterListeners.Where(kvp => kvp.Value.Contains(series)).Select(kvp => kvp.Key.Counter).FirstOrDefault();
                 writer.WriteAttributeString("CategoryName", counter.CategoryName);
                 writer.WriteAttributeString("InstanceName", string.IsNullOrEmpty(counter.InstanceName) ? "*" : counter.InstanceName);
                 writer.WriteAttributeString("CounterName", counter.CounterName);

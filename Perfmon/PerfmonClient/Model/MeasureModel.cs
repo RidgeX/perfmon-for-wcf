@@ -10,5 +10,11 @@ namespace PerfmonClient.Model
     {
         public DateTime DateTime { get; set; }
         public double Value { get; set; }
+
+        public MeasureModel(DateTime dateTime, double value)
+        {
+            DateTime = dateTime;
+            Value = value;
+        }
     }
 }
