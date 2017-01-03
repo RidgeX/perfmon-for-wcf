@@ -85,6 +85,15 @@ namespace PerfmonClient.Model
     {
         public string Name { get; set; }
         public CounterItem Parent { get; set; }
+        public string Path
+        {
+            get
+            {
+                if (Parent == null || Parent.Parent == null) return string.Empty;
+
+                return string.Format(@"\{0}({1})\{2}", Parent.Parent.Name, Name, Parent.Name);
+            }
+        }
 
         public InstanceItem(string name, CounterItem parent)
         {

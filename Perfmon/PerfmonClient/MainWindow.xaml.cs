@@ -43,7 +43,7 @@ namespace PerfmonClient
     {
         public IPerfmonService Service { get; set; }
         public ObservableCollection<CategoryItem> CategoryItems { get; set; }
-        public Dictionary<InstanceItem, List<Series>> CounterListeners { get; set; }
+        public Dictionary<string, List<Series>> CounterListeners { get; set; }
         public ObservableCollection<Tab> Tabs { get; set; }
 
         public MainWindow()
@@ -101,7 +101,7 @@ namespace PerfmonClient
                 CategoryItems.Add(categoryItem);
             }
 
-            CounterListeners = new Dictionary<InstanceItem, List<Series>>();
+            CounterListeners = new Dictionary<string, List<Series>>();
 
             Tabs = new ObservableCollection<Tab>();
             Tab tab = new Tab("Default", 2, 2);
@@ -133,7 +133,7 @@ namespace PerfmonClient
                     }
 
                     List<Series> listeners;
-                    if (CounterListeners.TryGetValue(instanceItem, out listeners))
+                    if (CounterListeners.TryGetValue(instanceItem.Path, out listeners))
                     {
                         foreach (Series series in listeners)
                         {
@@ -368,7 +368,7 @@ namespace PerfmonClient
                 };
 
                 chart.Series.Add(series);
-                AddCounterListener(instanceItem, series);
+                AddCounterListener(instanceItem.Path, series);
             }
         }
 
@@ -394,13 +394,13 @@ namespace PerfmonClient
             }
         }
 
-        public void AddCounterListener(InstanceItem instanceItem, Series series)
+        public void AddCounterListener(string path, Series series)
         {
             List<Series> listeners;
-            if (!CounterListeners.TryGetValue(instanceItem, out listeners))
+            if (!CounterListeners.TryGetValue(path, out listeners))
             {
                 listeners = new List<Series>();
-                CounterListeners.Add(instanceItem, listeners);
+                CounterListeners.Add(path, listeners);
             }
             listeners.Add(series);
         }
@@ -409,26 +409,16 @@ namespace PerfmonClient
         {
             foreach (var kvp in CounterListeners.ToList())
             {
-                InstanceItem instanceItem = kvp.Key;
+                string path = kvp.Key;
                 List<Series> listeners = kvp.Value;
 
                 listeners.Remove(series);
 
                 if (!listeners.Any())
                 {
-                    CounterListeners.Remove(instanceItem);
+                    CounterListeners.Remove(path);
                 }
             }
-        }
-
-        public InstanceItem FindInstanceItem(string categoryName, string counterName, string instanceName)
-        {
-            CategoryItem categoryItem = CategoryItems.FirstOrDefault(item => item.Name == categoryName);
-            if (categoryItem == null) return null;
-            CounterItem counterItem = categoryItem.CounterItems.FirstOrDefault(item => item.Name == counterName);
-            if (counterItem == null) return null;
-            InstanceItem instanceItem = counterItem.InstanceItems.FirstOrDefault(item => item.Name == instanceName);
-            return instanceItem;
         }
     }
 }

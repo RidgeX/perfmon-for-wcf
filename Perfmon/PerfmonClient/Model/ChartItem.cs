@@ -4,7 +4,6 @@ using PerfmonClient.UI.Converters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -107,19 +106,7 @@ namespace PerfmonClient.Model
                         var strokeBrush = (SolidColorBrush) brushes[0];
                         var fillBrush = (SolidColorBrush) brushes[1];
 
-                        string categoryName = reader.GetAttribute("CategoryName");
-                        string counterName = reader.GetAttribute("CounterName");
-                        string instanceName = reader.GetAttribute("InstanceName");
-                        InstanceItem instanceItem = mainWindow.FindInstanceItem(categoryName, counterName, instanceName);
-
-                        if (instanceItem == null)
-                        {
-                            MessageBox.Show(string.Format("The following counter could not be found:\n\\{0}({1})\\{2}",
-                                categoryName, instanceName, counterName), "Load Tab",
-                                MessageBoxButton.OK, MessageBoxImage.Warning);
-                            reader.Read();
-                            continue;
-                        }
+                        string path = reader.GetAttribute("Path");
 
                         LineSeries series = new LineSeries()
                         {
@@ -132,7 +119,7 @@ namespace PerfmonClient.Model
                         };
 
                         SeriesCollection.Add(series);
-                        mainWindow.AddCounterListener(instanceItem, series);
+                        mainWindow.AddCounterListener(path, series);
 
                         reader.Read();
                     }
@@ -159,10 +146,8 @@ namespace PerfmonClient.Model
                 var color = (Color) brushConverter.Convert(new object[] { series.Stroke, series.Fill }, typeof(Color), null, CultureInfo.InvariantCulture);
                 writer.WriteAttributeString("Color", color.ToString());
 
-                InstanceItem instanceItem = mainWindow.CounterListeners.Where(kvp => kvp.Value.Contains(series)).Select(kvp => kvp.Key).First();
-                writer.WriteAttributeString("CategoryName", instanceItem.Parent.Parent.Name);
-                writer.WriteAttributeString("CounterName", instanceItem.Parent.Name);
-                writer.WriteAttributeString("InstanceName", instanceItem.Name);
+                string path = mainWindow.CounterListeners.Where(kvp => kvp.Value.Contains(series)).Select(kvp => kvp.Key).First();
+                writer.WriteAttributeString("Path", path);
 
                 writer.WriteEndElement();
             }
