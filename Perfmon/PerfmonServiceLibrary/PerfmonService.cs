@@ -90,6 +90,11 @@ namespace PerfmonServiceLibrary
         public void Unsubscribe(string categoryName, string counterName)
         {
             IPerfmonCallback callback = OperationContext.Current.GetCallbackChannel<IPerfmonCallback>();
+            RemoveClient(categoryName, counterName, callback);
+        }
+
+        public void RemoveClient(string categoryName, string counterName, IPerfmonCallback callback)
+        {
             string key = string.Format(@"\{0}\{1}", categoryName, counterName);
 
             lock (_lock)
@@ -160,7 +165,16 @@ namespace PerfmonServiceLibrary
                             {
                                 Parallel.ForEach(list, subscriber =>
                                 {
-                                    subscriber.OnNext(e);
+                                    var channel = (IClientChannel) subscriber;
+
+                                    if (channel.State == CommunicationState.Opened)
+                                    {
+                                        subscriber.OnNext(e);
+                                    }
+                                    else if (channel.State == CommunicationState.Closed || channel.State == CommunicationState.Faulted)
+                                    {
+                                        RemoveClient(categoryName, counterName, subscriber);
+                                    }
                                 });
                             });
                         }
