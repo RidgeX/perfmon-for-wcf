@@ -341,7 +341,7 @@ namespace PerfmonClient
 
                     var template = new DataTemplate(typeof(InstanceItem));
                     var textBlock = new FrameworkElementFactory(typeof(TextBlock));
-                    textBlock.SetBinding(TextBlock.TextProperty, new Binding("Name"));
+                    textBlock.SetBinding(TextBlock.TextProperty, new Binding("DisplayName"));
                     template.VisualTree = textBlock;
                     var adornedElement = (UIElement) mainWindow.Content;
                     var adornerLayer = AdornerLayer.GetAdornerLayer(adornedElement);
@@ -376,7 +376,7 @@ namespace PerfmonClient
                 {
                     PointGeometrySize = 9,
                     StrokeThickness = 2,
-                    Title = instanceItem.Name,
+                    Title = instanceItem.DisplayName,
                     Values = new ChartValues<MeasureModel>()
                 };
 

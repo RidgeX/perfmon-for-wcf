@@ -85,12 +85,33 @@ namespace PerfmonClient.Model
     {
         public string Name { get; set; }
         public CounterItem Parent { get; set; }
+        public string DisplayName
+        {
+            get
+            {
+                if (Parent == null) return string.Empty;
+
+                // ("Available MBytes", "*") => "Available MBytes"
+                // ("% Processor Time", "_Total") => "% Processor Time (_Total)"
+                // ("Calls", "Calcu50.ICalculatorService.Add@http:||localhost:8000|Calculator|") => "Calls (Calcu50.ICalculatorService.Add)"
+                if (Name == "*")
+                {
+                    return Parent.Name;
+                }
+                else
+                {
+                    int index = Name.IndexOf('@');
+                    return string.Format("{0} ({1})", Parent.Name, (index != -1 ? Name.Substring(0, index) : Name));
+                }
+            }
+        }
         public string Path
         {
             get
             {
                 if (Parent == null || Parent.Parent == null) return string.Empty;
 
+                // ("Processor", "% Processor Time", "_Total") => "\Processor(_Total)\% Processor Time"
                 return string.Format(@"\{0}({1})\{2}", Parent.Parent.Name, Name, Parent.Name);
             }
         }
