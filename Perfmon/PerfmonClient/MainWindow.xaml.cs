@@ -299,6 +299,11 @@ namespace PerfmonClient
             }
         }
 
+        private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
+        {
+            e.Handled = true;
+        }
+
         private DragAdorner dragAdorner;
         private Point dragStart;
 

@@ -103,6 +103,8 @@
                     <Style TargetType="{x:Type TreeViewItem}">
                         <EventSetter Event="PreviewMouseLeftButtonDown"
                                      Handler="TreeViewItem_PreviewMouseLeftButtonDown" />
+                        <EventSetter Event="RequestBringIntoView"
+                                     Handler="TreeViewItem_RequestBringIntoView" />
                         <Setter Property="IsExpanded" Value="{Binding IsExpanded}" />
                         <Setter Property="IsSelected" Value="{Binding IsSelected}" />
                     </Style>
