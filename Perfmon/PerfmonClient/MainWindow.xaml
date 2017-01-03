@@ -120,7 +120,7 @@
                         </StackPanel>
                     </HierarchicalDataTemplate>
                     <DataTemplate DataType="{x:Type model:InstanceItem}">
-                        <TextBlock Text="{Binding Name}" />
+                        <TextBlock Text="{Binding Name}" MinWidth="50" />
                     </DataTemplate>
                 </TreeView.Resources>
             </TreeView>
