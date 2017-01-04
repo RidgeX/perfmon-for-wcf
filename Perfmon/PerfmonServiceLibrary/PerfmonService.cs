@@ -22,11 +22,13 @@ namespace PerfmonServiceLibrary
             "ServiceModelService 4.0.0.0"
         };
 
+        private static readonly CategoryList categories;
         private static readonly Dictionary<string, CounterSample> prevSamples;
         private static readonly Dictionary<Tuple<string, string>, List<IPerfmonCallback>> subscribers;
 
         static PerfmonService()
         {
+            categories = new CategoryList();
             prevSamples = new Dictionary<string, CounterSample>();
             subscribers = new Dictionary<Tuple<string, string>, List<IPerfmonCallback>>();
         }
@@ -37,23 +39,29 @@ namespace PerfmonServiceLibrary
             Console.WriteLine("List()");
             #endif
 
-            CategoryList categories = new CategoryList();
-
-            foreach (var category in PerformanceCounterCategory.GetCategories())
+            if (!categories.Any())
             {
-                if (!allowedCategories.Contains(category.CategoryName)) continue;
-
-                List<Counter> counters = new List<Counter>();
-
-                foreach (var counter in category.GetCounters(string.Empty))
+                foreach (var category in PerformanceCounterCategory.GetCategories())
                 {
-                    counters.Add(new Counter() { Name = counter.CounterName });
-                }
+                    if (!allowedCategories.Contains(category.CategoryName)) continue;
 
-                categories.Add(new Category() { Name = category.CategoryName, Counters = counters });
+                    List<Counter> counters = new List<Counter>();
+
+                    foreach (var counter in category.GetCounters(string.Empty))
+                    {
+                        counters.Add(new Counter() { Name = counter.CounterName });
+                    }
+
+                    categories.Add(new Category() { Name = category.CategoryName, Counters = counters });
+                }
             }
 
             return categories;
+        }
+
+        public void Refresh()
+        {
+            categories.Clear();
         }
 
         public bool Subscribe(string categoryName, string counterName)
