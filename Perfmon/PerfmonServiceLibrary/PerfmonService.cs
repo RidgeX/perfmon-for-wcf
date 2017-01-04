@@ -214,21 +214,20 @@ namespace PerfmonServiceLibrary
                             string instanceName = (pcc.CategoryType == PerformanceCounterCategoryType.MultiInstance ? id.InstanceName : "*");
                             string path = string.Format(@"\{0}({1})\{2}", categoryName, instanceName, counterName);
 
-                            CounterSample prevSample;
-                            if (!prevSamples.TryGetValue(path, out prevSample))
-                            {
-                                prevSample = CounterSample.Empty;
-                            }
                             CounterSample sample = id.Sample;
-                            float value = CounterSample.Calculate(prevSample, sample);
-                            prevSamples[path] = sample;
 
                             if (timestamp == null)
                             {
                                 timestamp = DateTime.FromFileTime(sample.TimeStamp100nSec);
                             }
 
-                            instances.Add(new Instance() { Name = instanceName, Value = value });
+                            CounterSample prevSample;
+                            if (prevSamples.TryGetValue(path, out prevSample))
+                            {
+                                float value = CounterSample.Calculate(prevSample, sample);
+                                instances.Add(new Instance() { Name = instanceName, Value = value });
+                            }
+                            prevSamples[path] = sample;
                         }
 
                         if (instances.Count == 0) continue;
