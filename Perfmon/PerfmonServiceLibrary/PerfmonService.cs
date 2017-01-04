@@ -142,7 +142,18 @@ namespace PerfmonServiceLibrary
                 foreach (string categoryName in subscribers.Select(kvp => kvp.Key.Item1).Distinct())
                 {
                     PerformanceCounterCategory pcc = new PerformanceCounterCategory(categoryName);
+
+                    #if DEBUG
+                    Stopwatch stopwatch = new Stopwatch();
+                    stopwatch.Start();
+                    #endif
+
                     InstanceDataCollectionCollection idcc = pcc.ReadCategory();
+
+                    #if DEBUG
+                    stopwatch.Stop();
+                    Console.WriteLine("{0:f4} ms\t{1}", stopwatch.Elapsed.TotalMilliseconds, categoryName);
+                    #endif
 
                     foreach (InstanceDataCollection idc in idcc.Values)
                     {
