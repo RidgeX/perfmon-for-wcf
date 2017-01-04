@@ -13,6 +13,7 @@ namespace PerfmonClient
 {
     public class Connection : IPerfmonCallback
     {
+        private DuplexChannelFactory<IPerfmonService> factory;
         private IPerfmonService service;
 
         public Connection(string host, int port)
@@ -21,8 +22,10 @@ namespace PerfmonClient
             binding.MaxReceivedMessageSize = int.MaxValue;
             binding.Security.Mode = SecurityMode.None;
             string address = string.Format("net.tcp://{0}:{1}/Perfmon/", host, port);
-            DuplexChannelFactory<IPerfmonService> factory = new DuplexChannelFactory<IPerfmonService>(this, binding, address);
+
+            factory = new DuplexChannelFactory<IPerfmonService>(this, binding, address);
             service = factory.CreateChannel();
+            ((IClientChannel) service).Faulted += OnFault;
         }
 
         private void TryJoin()
@@ -64,19 +67,16 @@ namespace PerfmonClient
             catch (CommunicationException) { }
         }
 
-        private void TrySubscribe(string categoryName, string counterName)
+        private bool TrySubscribe(string categoryName, string counterName)
         {
             try
             {
-                bool success = service.Subscribe(categoryName, counterName);
-
-                if (!success)
-                {
-                    MessageBox.Show(string.Format("The following counter no longer exists:\n\\{0}\\{1}", categoryName, counterName), "Subscribe",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
+                return service.Subscribe(categoryName, counterName);
             }
-            catch (CommunicationException) { }
+            catch (CommunicationException)
+            {
+                return false;
+            }
         }
 
         private void TryUnsubscribe(string categoryName, string counterName)
@@ -110,6 +110,21 @@ namespace PerfmonClient
             }
         }
 
+        private void ClearTreeView()
+        {
+            var mainWindow = (MainWindow) Application.Current.MainWindow;
+
+            foreach (CategoryItem categoryItem in mainWindow.CategoryItems)
+            {
+                foreach (CounterItem counterItem in categoryItem.CounterItems)
+                {
+                    counterItem.PropertyChanged -= OnPropertyChanged;
+                }
+            }
+
+            mainWindow.CategoryItems.Clear();
+        }
+
         private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "IsChecked")
@@ -118,12 +133,19 @@ namespace PerfmonClient
 
                 if (counterItem.IsChecked == true)
                 {
-                    TrySubscribe(counterItem.Parent.Name, counterItem.Name);
+                    if (!TrySubscribe(counterItem.Parent.Name, counterItem.Name))
+                    {
+                        MessageBox.Show(string.Format("The following counter no longer exists:\n\\{0}\\{1}",
+                            counterItem.Parent.Name, counterItem.Name), "Performance Monitor",
+                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+
                     counterItem.IsExpanded = true;
                 }
                 else
                 {
                     TryUnsubscribe(counterItem.Parent.Name, counterItem.Name);
+
                     counterItem.IsExpanded = false;
                     counterItem.InstanceItems.Clear();
                 }
@@ -139,6 +161,47 @@ namespace PerfmonClient
         public void Close()
         {
             TryLeave();
+        }
+
+        public void OnFault(object sender, EventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var mainWindow = (MainWindow) Application.Current.MainWindow;
+
+                ((IClientChannel) service).Abort();
+
+                if (MessageBox.Show("Lost connection to server. Try reconnecting?", "Performance Monitor",
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                {
+                    service = factory.CreateChannel();
+                    ((IClientChannel) service).Faulted += OnFault;
+
+                    try
+                    {
+                        service.Join();
+
+                        foreach (CategoryItem categoryItem in mainWindow.CategoryItems)
+                        {
+                            foreach (CounterItem counterItem in categoryItem.CounterItems)
+                            {
+                                if (counterItem.IsChecked == true)
+                                {
+                                    if (!TrySubscribe(categoryItem.Name, counterItem.Name))
+                                    {
+                                        counterItem.IsChecked = false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (CommunicationException) { }
+                }
+                else
+                {
+                    ClearTreeView();
+                }
+            });
         }
 
         public void OnNext(EventData e)
