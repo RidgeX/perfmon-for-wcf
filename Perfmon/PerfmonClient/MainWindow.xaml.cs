@@ -4,14 +4,12 @@ using LiveCharts.Wpf;
 using Microsoft.Win32;
 using PerfmonClient.Model;
 using PerfmonClient.UI;
-using PerfmonServiceLibrary;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -39,15 +37,16 @@ namespace PerfmonClient
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, IPerfmonCallback
+    public partial class MainWindow : Window
     {
+        private const int maxPointsPerChart = 30;
         private const double pointSize = 9;
         private const double strokeThickness = 2;
 
         private DragAdorner dragAdorner;
         private Point dragStart;
 
-        public IPerfmonService Service { get; set; }
+        public Connection Connection { get; set; }
         public ObservableCollection<CategoryItem> CategoryItems { get; set; }
         public Dictionary<string, List<Series>> CounterListeners { get; set; }
         public ObservableCollection<Tab> Tabs { get; set; }
@@ -62,121 +61,17 @@ namespace PerfmonClient
                 .Y(model => model.Value);
             Charting.For<MeasureModel>(mapper);
 
-            NetTcpBinding binding = new NetTcpBinding();
-            binding.MaxReceivedMessageSize = int.MaxValue;
-            binding.Security.Mode = SecurityMode.None;
-            string address = "net.tcp://localhost:8080/Perfmon/";
-            DuplexChannelFactory<IPerfmonService> factory = new DuplexChannelFactory<IPerfmonService>(this, binding, address);
-            Service = factory.CreateChannel();
-            Service.Join();
-            CategoryList categories = Service.List();
-            categories.Sort((a, b) => a.Name.CompareTo(b.Name));
-
             CategoryItems = new ObservableCollection<CategoryItem>();
-
-            foreach (Category category in categories)
-            {
-                CategoryItem categoryItem = new CategoryItem(category.Name);
-
-                foreach (Counter counter in category.Counters)
-                {
-                    CounterItem counterItem = new CounterItem(counter.Name, categoryItem);
-
-                    counterItem.PropertyChanged += (s, e) =>
-                    {
-                        if (e.PropertyName == "IsChecked")
-                        {
-                            CounterItem ci = (CounterItem) s;
-
-                            if (ci.IsChecked == true)
-                            {
-                                try
-                                {
-                                    Service.Subscribe(category.Name, counter.Name);
-                                }
-                                catch (CommunicationException) { }
-                                ci.IsExpanded = true;
-                            }
-                            else
-                            {
-                                try
-                                {
-                                    Service.Unsubscribe(category.Name, counter.Name);
-                                }
-                                catch (CommunicationException) { }
-                                ci.IsExpanded = false;
-                                ci.InstanceItems.Clear();
-                            }
-                        }
-                    };
-
-                    categoryItem.CounterItems.Add(counterItem);
-                }
-
-                CategoryItems.Add(categoryItem);
-            }
-
             CounterListeners = new Dictionary<string, List<Series>>();
 
             Tabs = new ObservableCollection<Tab>();
             Tab tab = new Tab("Default", 2, 2);
             Tabs.Add(tab);
             tabControl.SelectedItem = tab;
+
+            Connection = new Connection("localhost", 8080);
+            Connection.Open();
         }
-
-        #region Update Callback
-
-        public void OnNext(EventData e)
-        {
-            Category category = e.Category;
-            DateTime timestamp = e.Timestamp;
-
-            CategoryItem categoryItem = CategoryItems.FirstOrDefault(item => item.Name == category.Name);
-            if (categoryItem == null) return;
-
-            foreach (Counter counter in category.Counters)
-            {
-                CounterItem counterItem = categoryItem.CounterItems.FirstOrDefault(item => item.Name == counter.Name);
-                if (counterItem == null) continue;
-
-                foreach (Instance instance in counter.Instances)
-                {
-                    InstanceItem instanceItem = counterItem.InstanceItems.FirstOrDefault(item => item.Name == instance.Name);
-
-                    if (instanceItem == null)
-                    {
-                        instanceItem = new InstanceItem(instance.Name, counterItem);
-                        counterItem.InstanceItems.Add(instanceItem);
-                    }
-
-                    List<Series> listeners;
-                    if (CounterListeners.TryGetValue(instanceItem.Path, out listeners))
-                    {
-                        foreach (Series series in listeners)
-                        {
-                            series.Values.Add(new MeasureModel(timestamp, instance.Value));
-
-                            if (series.DataContext != BindingOperations.DisconnectedSource)
-                            {
-                                var chartItem = (ChartItem) series.DataContext;
-
-                                if (chartItem != null)
-                                {
-                                    chartItem.SetAxisLimits(timestamp);
-                                }
-                            }
-
-                            if (series.Values.Count > 30)
-                            {
-                                series.Values.RemoveAt(0);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        #endregion
 
         #region New Tab
 
@@ -332,7 +227,7 @@ namespace PerfmonClient
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            Service.Leave();
+            Connection.Close();
         }
 
         #endregion
@@ -493,6 +388,33 @@ namespace PerfmonClient
                 Title = title,
                 Values = new ChartValues<MeasureModel>()
             };
+        }
+
+        public void UpdateSeries(string path, DateTime timestamp, float value)
+        {
+            List<Series> listeners;
+            if (CounterListeners.TryGetValue(path, out listeners))
+            {
+                foreach (Series series in listeners)
+                {
+                    series.Values.Add(new MeasureModel(timestamp, value));
+
+                    if (series.DataContext != BindingOperations.DisconnectedSource)
+                    {
+                        var chartItem = (ChartItem) series.DataContext;
+
+                        if (chartItem != null)
+                        {
+                            chartItem.SetAxisLimits(timestamp);
+                        }
+                    }
+
+                    if (series.Values.Count > maxPointsPerChart)
+                    {
+                        series.Values.RemoveAt(0);
+                    }
+                }
+            }
         }
 
         #endregion
