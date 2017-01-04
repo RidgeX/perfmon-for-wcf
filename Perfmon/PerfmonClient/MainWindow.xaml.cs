@@ -41,6 +41,9 @@ namespace PerfmonClient
     /// </summary>
     public partial class MainWindow : Window, IPerfmonCallback
     {
+        private DragAdorner dragAdorner;
+        private Point dragStart;
+
         public IPerfmonService Service { get; set; }
         public ObservableCollection<CategoryItem> CategoryItems { get; set; }
         public Dictionary<string, List<Series>> CounterListeners { get; set; }
@@ -109,6 +112,8 @@ namespace PerfmonClient
             tabControl.SelectedItem = tab;
         }
 
+        #region Update Callback
+
         public void OnNext(EventData e)
         {
             Category category = e.Category;
@@ -159,6 +164,10 @@ namespace PerfmonClient
             }
         }
 
+        #endregion
+
+        #region New Tab
+
         private void newTabMenuItem_Click(object sender, RoutedEventArgs e)
         {
             NewTabDialog dialog = new NewTabDialog();
@@ -176,6 +185,10 @@ namespace PerfmonClient
                 tabControl.SelectedItem = tab;
             }
         }
+
+        #endregion
+
+        #region Save/Load Tab
 
         private void saveTabMenuItem_Click(object sender, RoutedEventArgs e)
         {
@@ -233,6 +246,10 @@ namespace PerfmonClient
                 }
             }
         }
+
+        #endregion
+
+        #region Edit/Close Tab
 
         private void editTabMenuItem_Click(object sender, RoutedEventArgs e)
         {
@@ -292,6 +309,10 @@ namespace PerfmonClient
             }
         }
 
+        #endregion
+
+        #region Quit
+
         private void quitMenuItem_Click(object sender, RoutedEventArgs e)
         {
             Close();
@@ -302,10 +323,15 @@ namespace PerfmonClient
             ((IClientChannel) Service).Close();
         }
 
+        #endregion
+
+        #region Item Selection
+
         private void treeView_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             var item = (Item) treeView.SelectedItem;
 
+            // Deselect item when clicking in blank area
             if (item != null)
             {
                 item.IsSelected = false;
@@ -314,14 +340,17 @@ namespace PerfmonClient
 
         private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
         {
+            // Ignore auto-scroll on item selection
             e.Handled = true;
         }
 
-        private DragAdorner dragAdorner;
-        private Point dragStart;
+        #endregion
+
+        #region Item Drag and Drop
 
         private void TreeViewItem_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            // Save position of initial mouse down
             dragStart = e.GetPosition(null);
         }
 
@@ -329,16 +358,20 @@ namespace PerfmonClient
         {
             var item = (Item) treeView.SelectedItem;
 
+            // Only allow instance items to be dragged
             if (item != null && item is InstanceItem && e.LeftButton == MouseButtonState.Pressed)
             {
                 Vector offset = e.GetPosition(null) - dragStart;
 
+                // Start drag if mouse was held for a minimum distance
                 if (Math.Abs(offset.X) > SystemParameters.MinimumHorizontalDragDistance ||
                     Math.Abs(offset.Y) > SystemParameters.MinimumVerticalDragDistance)
                 {
+                    // Allow dropping anywhere within the window
                     Window mainWindow = Application.Current.MainWindow;
                     mainWindow.AllowDrop = true;
 
+                    // Create item ghost
                     var template = new DataTemplate(typeof(InstanceItem));
                     var textBlock = new FrameworkElementFactory(typeof(TextBlock));
                     textBlock.SetBinding(TextBlock.TextProperty, new Binding("DisplayName"));
@@ -349,9 +382,11 @@ namespace PerfmonClient
 
                     mainWindow.PreviewDragOver += MainWindow_PreviewDragOver;
 
+                    // Perform drag and drop
                     DataObject data = new DataObject(typeof(InstanceItem), item);
                     DragDrop.DoDragDrop(treeView, data, DragDropEffects.Move);
 
+                    // Cleanup handlers
                     mainWindow.PreviewDragOver -= MainWindow_PreviewDragOver;
                     dragAdorner.Detach();
                     mainWindow.AllowDrop = false;
@@ -361,12 +396,14 @@ namespace PerfmonClient
 
         private void MainWindow_PreviewDragOver(object sender, DragEventArgs e)
         {
+            // Move item ghost to current mouse position
             Point point = e.GetPosition(this);
             dragAdorner.SetPosition(point.X, point.Y);
         }
 
         private void CartesianChart_Drop(object sender, DragEventArgs e)
         {
+            // Create chart series from dropped instance items
             if (e.Data.GetDataPresent(typeof(InstanceItem)))
             {
                 var instanceItem = (InstanceItem) e.Data.GetData(typeof(InstanceItem));
@@ -384,6 +421,10 @@ namespace PerfmonClient
                 AddCounterListener(instanceItem.Path, series);
             }
         }
+
+        #endregion
+
+        #region Edit/Remove Chart Series
 
         private void editChartMenuItem_Click(object sender, RoutedEventArgs e)
         {
@@ -406,6 +447,10 @@ namespace PerfmonClient
                 chart.Series.Remove(series);
             }
         }
+
+        #endregion
+
+        #region Helper Methods
 
         public void AddCounterListener(string path, Series series)
         {
@@ -433,5 +478,7 @@ namespace PerfmonClient
                 }
             }
         }
+
+        #endregion
     }
 }
