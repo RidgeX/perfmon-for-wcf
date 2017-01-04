@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace PerfmonServiceLibrary
 {
-    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Single)]
     public class PerfmonService : IPerfmonService
     {
         private static readonly string[] allowedCategories =
@@ -22,13 +22,11 @@ namespace PerfmonServiceLibrary
             "ServiceModelService 4.0.0.0"
         };
 
-        private static readonly object _lock;
         private static readonly Dictionary<string, CounterSample> prevSamples;
         private static readonly Dictionary<Tuple<string, string>, List<IPerfmonCallback>> subscribers;
 
         static PerfmonService()
         {
-            _lock = new object();
             prevSamples = new Dictionary<string, CounterSample>();
             subscribers = new Dictionary<Tuple<string, string>, List<IPerfmonCallback>>();
         }
@@ -85,22 +83,19 @@ namespace PerfmonServiceLibrary
             IPerfmonCallback callback = OperationContext.Current.GetCallbackChannel<IPerfmonCallback>();
             Tuple<string, string> tuple = Tuple.Create(categoryName, counterName);
 
-            lock (_lock)
+            List<IPerfmonCallback> list;
+            if (subscribers.TryGetValue(tuple, out list))
             {
-                List<IPerfmonCallback> list;
-                if (subscribers.TryGetValue(tuple, out list))
+                if (!list.Contains(callback))
                 {
-                    if (!list.Contains(callback))
-                    {
-                        list.Add(callback);
-                    }
-                }
-                else
-                {
-                    list = new List<IPerfmonCallback>();
                     list.Add(callback);
-                    subscribers.Add(tuple, list);
                 }
+            }
+            else
+            {
+                list = new List<IPerfmonCallback>();
+                list.Add(callback);
+                subscribers.Add(tuple, list);
             }
 
             return true;
@@ -120,97 +115,91 @@ namespace PerfmonServiceLibrary
         {
             Tuple<string, string> tuple = Tuple.Create(categoryName, counterName);
 
-            lock (_lock)
+            List<IPerfmonCallback> list;
+            if (subscribers.TryGetValue(tuple, out list))
             {
-                List<IPerfmonCallback> list;
-                if (subscribers.TryGetValue(tuple, out list))
-                {
-                    list.Remove(callback);
+                list.Remove(callback);
 
-                    if (!list.Any())
-                    {
-                        subscribers.Remove(tuple);
-                    }
+                if (!list.Any())
+                {
+                    subscribers.Remove(tuple);
                 }
             }
         }
 
         public void Update()
         {
-            lock (_lock)
+            foreach (string categoryName in subscribers.Select(kvp => kvp.Key.Item1).Distinct())
             {
-                foreach (string categoryName in subscribers.Select(kvp => kvp.Key.Item1).Distinct())
+                PerformanceCounterCategory pcc = new PerformanceCounterCategory(categoryName);
+
+                #if DEBUG
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start();
+                #endif
+
+                InstanceDataCollectionCollection idcc = pcc.ReadCategory();
+
+                #if DEBUG
+                stopwatch.Stop();
+                Console.WriteLine("{0:f4} ms\t{1}", stopwatch.Elapsed.TotalMilliseconds, categoryName);
+                #endif
+
+                foreach (InstanceDataCollection idc in idcc.Values)
                 {
-                    PerformanceCounterCategory pcc = new PerformanceCounterCategory(categoryName);
+                    string counterName = idc.CounterName;
+                    Tuple<string, string> tuple = Tuple.Create(categoryName, counterName);
 
-                    #if DEBUG
-                    Stopwatch stopwatch = new Stopwatch();
-                    stopwatch.Start();
-                    #endif
-
-                    InstanceDataCollectionCollection idcc = pcc.ReadCategory();
-
-                    #if DEBUG
-                    stopwatch.Stop();
-                    Console.WriteLine("{0:f4} ms\t{1}", stopwatch.Elapsed.TotalMilliseconds, categoryName);
-                    #endif
-
-                    foreach (InstanceDataCollection idc in idcc.Values)
+                    List<IPerfmonCallback> list;
+                    if (subscribers.TryGetValue(tuple, out list))
                     {
-                        string counterName = idc.CounterName;
-                        Tuple<string, string> tuple = Tuple.Create(categoryName, counterName);
+                        List<Instance> instances = new List<Instance>();
+                        DateTime? timestamp = null;
 
-                        List<IPerfmonCallback> list;
-                        if (subscribers.TryGetValue(tuple, out list))
+                        foreach (InstanceData id in idc.Values)
                         {
-                            List<Instance> instances = new List<Instance>();
-                            DateTime? timestamp = null;
+                            string instanceName = (pcc.CategoryType == PerformanceCounterCategoryType.MultiInstance ? id.InstanceName : "*");
+                            string path = string.Format(@"\{0}({1})\{2}", categoryName, instanceName, counterName);
 
-                            foreach (InstanceData id in idc.Values)
+                            CounterSample prevSample;
+                            if (!prevSamples.TryGetValue(path, out prevSample))
                             {
-                                string instanceName = (pcc.CategoryType == PerformanceCounterCategoryType.MultiInstance ? id.InstanceName : "*");
-                                string path = string.Format(@"\{0}({1})\{2}", categoryName, instanceName, counterName);
+                                prevSample = CounterSample.Empty;
+                            }
+                            CounterSample sample = id.Sample;
+                            float value = CounterSample.Calculate(prevSample, sample);
+                            prevSamples[path] = sample;
 
-                                CounterSample prevSample;
-                                if (!prevSamples.TryGetValue(path, out prevSample))
-                                {
-                                    prevSample = CounterSample.Empty;
-                                }
-                                CounterSample sample = id.Sample;
-                                float value = CounterSample.Calculate(prevSample, sample);
-                                prevSamples[path] = sample;
-
-                                if (timestamp == null)
-                                {
-                                    timestamp = DateTime.FromFileTime(sample.TimeStamp100nSec);
-                                }
-
-                                instances.Add(new Instance() { Name = instanceName, Value = value });
+                            if (timestamp == null)
+                            {
+                                timestamp = DateTime.FromFileTime(sample.TimeStamp100nSec);
                             }
 
-                            if (instances.Count == 0) continue;
-
-                            Counter counter = new Counter() { Name = counterName, Instances = instances };
-                            Category category = new Category() { Name = categoryName, Counters = new List<Counter>() { counter } };
-                            EventData e = new EventData() { Category = category, Timestamp = timestamp.Value };
-
-                            ThreadPool.QueueUserWorkItem(_ =>
-                            {
-                                Parallel.ForEach(list, subscriber =>
-                                {
-                                    var channel = (IClientChannel) subscriber;
-
-                                    if (channel.State == CommunicationState.Opened)
-                                    {
-                                        subscriber.OnNext(e);
-                                    }
-                                    else if (channel.State == CommunicationState.Closed || channel.State == CommunicationState.Faulted)
-                                    {
-                                        RemoveClient(categoryName, counterName, subscriber);
-                                    }
-                                });
-                            });
+                            instances.Add(new Instance() { Name = instanceName, Value = value });
                         }
+
+                        if (instances.Count == 0) continue;
+
+                        Counter counter = new Counter() { Name = counterName, Instances = instances };
+                        Category category = new Category() { Name = categoryName, Counters = new List<Counter>() { counter } };
+                        EventData e = new EventData() { Category = category, Timestamp = timestamp.Value };
+
+                        ThreadPool.QueueUserWorkItem(_ =>
+                        {
+                            Parallel.ForEach(list, subscriber =>
+                            {
+                                var channel = (IClientChannel) subscriber;
+
+                                if (channel.State == CommunicationState.Opened)
+                                {
+                                    subscriber.OnNext(e);
+                                }
+                                else if (channel.State == CommunicationState.Closed || channel.State == CommunicationState.Faulted)
+                                {
+                                    RemoveClient(categoryName, counterName, subscriber);
+                                }
+                            });
+                        });
                     }
                 }
             }
