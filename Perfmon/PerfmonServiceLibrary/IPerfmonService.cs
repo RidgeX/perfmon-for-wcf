@@ -7,20 +7,26 @@ using System.Text;
 
 namespace PerfmonServiceLibrary
 {
-    [ServiceContract(Namespace = "http://Perfmon", CallbackContract = typeof(IPerfmonCallback))]
+    [ServiceContract(Namespace = "http://Perfmon", CallbackContract = typeof(IPerfmonCallback), SessionMode = SessionMode.Required)]
     public interface IPerfmonService
     {
-        [OperationContract]
+        [OperationContract(IsInitiating = true)]
+        void Join();
+
+        [OperationContract(IsInitiating = false)]
         CategoryList List();
 
-        [OperationContract]
+        [OperationContract(IsInitiating = false)]
         void Refresh();
 
-        [OperationContract]
+        [OperationContract(IsInitiating = false)]
         bool Subscribe(string categoryName, string counterName);
 
-        [OperationContract]
+        [OperationContract(IsInitiating = false)]
         void Unsubscribe(string categoryName, string counterName);
+
+        [OperationContract(IsInitiating = false, IsTerminating = true, IsOneWay = true)]
+        void Leave();
     }
 
     public interface IPerfmonCallback

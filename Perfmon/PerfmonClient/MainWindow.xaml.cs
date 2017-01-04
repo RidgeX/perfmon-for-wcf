@@ -68,6 +68,7 @@ namespace PerfmonClient
             string address = "net.tcp://localhost:8080/Perfmon/";
             DuplexChannelFactory<IPerfmonService> factory = new DuplexChannelFactory<IPerfmonService>(this, binding, address);
             Service = factory.CreateChannel();
+            Service.Join();
             CategoryList categories = Service.List();
             categories.Sort((a, b) => a.Name.CompareTo(b.Name));
 
@@ -89,12 +90,20 @@ namespace PerfmonClient
 
                             if (ci.IsChecked == true)
                             {
-                                Service.Subscribe(category.Name, counter.Name);
+                                try
+                                {
+                                    Service.Subscribe(category.Name, counter.Name);
+                                }
+                                catch (CommunicationException) { }
                                 ci.IsExpanded = true;
                             }
                             else
                             {
-                                Service.Unsubscribe(category.Name, counter.Name);
+                                try
+                                {
+                                    Service.Unsubscribe(category.Name, counter.Name);
+                                }
+                                catch (CommunicationException) { }
                                 ci.IsExpanded = false;
                                 ci.InstanceItems.Clear();
                             }
@@ -323,7 +332,7 @@ namespace PerfmonClient
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            ((IClientChannel) Service).Close();
+            Service.Leave();
         }
 
         #endregion

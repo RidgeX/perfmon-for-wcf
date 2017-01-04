@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.ServiceModel;
+using System.ServiceModel.Channels;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,6 +32,35 @@ namespace PerfmonServiceLibrary
             categories = new CategoryList();
             prevSamples = new Dictionary<string, CounterSample>();
             subscribers = new Dictionary<Tuple<string, string>, List<IPerfmonCallback>>();
+        }
+
+        public void Join()
+        {
+            #if DEBUG
+            MessageProperties properties = OperationContext.Current.IncomingMessageProperties;
+            var endpoint = (RemoteEndpointMessageProperty) properties[RemoteEndpointMessageProperty.Name];
+            Console.WriteLine("{0}:{1} has joined", endpoint.Address, endpoint.Port);
+            #endif
+
+            OperationContext.Current.Channel.Faulted += OnFault;
+        }
+
+        public void Leave()
+        {
+            #if DEBUG
+            MessageProperties properties = OperationContext.Current.IncomingMessageProperties;
+            var endpoint = (RemoteEndpointMessageProperty) properties[RemoteEndpointMessageProperty.Name];
+            Console.WriteLine("{0}:{1} has left", endpoint.Address, endpoint.Port);
+            #endif
+
+            IPerfmonCallback callback = OperationContext.Current.GetCallbackChannel<IPerfmonCallback>();
+            RemoveCallbacks(callback);
+        }
+
+        private void OnFault(object sender, EventArgs e)
+        {
+            var callback = (IPerfmonCallback) sender;
+            RemoveCallbacks(callback);
         }
 
         public CategoryList List()
@@ -101,8 +131,7 @@ namespace PerfmonServiceLibrary
             }
             else
             {
-                list = new List<IPerfmonCallback>();
-                list.Add(callback);
+                list = new List<IPerfmonCallback>() { callback };
                 subscribers.Add(tuple, list);
             }
 
@@ -116,16 +145,32 @@ namespace PerfmonServiceLibrary
             #endif
 
             IPerfmonCallback callback = OperationContext.Current.GetCallbackChannel<IPerfmonCallback>();
-            RemoveClient(categoryName, counterName, callback);
+            RemoveCallback(categoryName, counterName, callback);
         }
 
-        public void RemoveClient(string categoryName, string counterName, IPerfmonCallback callback)
+        public void RemoveCallback(string categoryName, string counterName, IPerfmonCallback callback)
         {
             Tuple<string, string> tuple = Tuple.Create(categoryName, counterName);
 
             List<IPerfmonCallback> list;
             if (subscribers.TryGetValue(tuple, out list))
             {
+                list.Remove(callback);
+
+                if (!list.Any())
+                {
+                    subscribers.Remove(tuple);
+                }
+            }
+        }
+
+        public void RemoveCallbacks(IPerfmonCallback callback)
+        {
+            foreach (var kvp in subscribers.ToList())
+            {
+                Tuple<string, string> tuple = kvp.Key;
+                List<IPerfmonCallback> list = kvp.Value;
+
                 list.Remove(callback);
 
                 if (!list.Any())
@@ -196,16 +241,11 @@ namespace PerfmonServiceLibrary
                         {
                             Parallel.ForEach(list, subscriber =>
                             {
-                                var channel = (IClientChannel) subscriber;
-
-                                if (channel.State == CommunicationState.Opened)
+                                try
                                 {
                                     subscriber.OnNext(e);
                                 }
-                                else if (channel.State == CommunicationState.Closed || channel.State == CommunicationState.Faulted)
-                                {
-                                    RemoveClient(categoryName, counterName, subscriber);
-                                }
+                                catch (CommunicationException) { }
                             });
                         });
                     }
