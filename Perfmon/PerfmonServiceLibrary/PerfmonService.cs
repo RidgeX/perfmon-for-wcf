@@ -22,17 +22,15 @@ namespace PerfmonServiceLibrary
             "ServiceModelService 4.0.0.0"
         };
 
-        private static readonly HashSet<string> activeCategories;
         private static readonly object _lock;
         private static readonly Dictionary<string, CounterSample> prevSamples;
-        private static readonly Dictionary<string, List<IPerfmonCallback>> subscribers;
+        private static readonly Dictionary<Tuple<string, string>, List<IPerfmonCallback>> subscribers;
 
         static PerfmonService()
         {
-            activeCategories = new HashSet<string>();
             _lock = new object();
             prevSamples = new Dictionary<string, CounterSample>();
-            subscribers = new Dictionary<string, List<IPerfmonCallback>>();
+            subscribers = new Dictionary<Tuple<string, string>, List<IPerfmonCallback>>();
         }
 
         public CategoryList List()
@@ -85,25 +83,23 @@ namespace PerfmonServiceLibrary
             }
 
             IPerfmonCallback callback = OperationContext.Current.GetCallbackChannel<IPerfmonCallback>();
-            string key = string.Format(@"\{0}\{1}", categoryName, counterName);
+            Tuple<string, string> tuple = Tuple.Create(categoryName, counterName);
 
             lock (_lock)
             {
                 List<IPerfmonCallback> list;
-                if (subscribers.TryGetValue(key, out list))
+                if (subscribers.TryGetValue(tuple, out list))
                 {
                     if (!list.Contains(callback))
                     {
                         list.Add(callback);
-                        activeCategories.Add(categoryName);
                     }
                 }
                 else
                 {
                     list = new List<IPerfmonCallback>();
                     list.Add(callback);
-                    subscribers.Add(key, list);
-                    activeCategories.Add(categoryName);
+                    subscribers.Add(tuple, list);
                 }
             }
 
@@ -122,19 +118,18 @@ namespace PerfmonServiceLibrary
 
         public void RemoveClient(string categoryName, string counterName, IPerfmonCallback callback)
         {
-            string key = string.Format(@"\{0}\{1}", categoryName, counterName);
+            Tuple<string, string> tuple = Tuple.Create(categoryName, counterName);
 
             lock (_lock)
             {
                 List<IPerfmonCallback> list;
-                if (subscribers.TryGetValue(key, out list))
+                if (subscribers.TryGetValue(tuple, out list))
                 {
                     list.Remove(callback);
 
                     if (!list.Any())
                     {
-                        activeCategories.Remove(categoryName);
-                        subscribers.Remove(key);
+                        subscribers.Remove(tuple);
                     }
                 }
             }
@@ -144,7 +139,7 @@ namespace PerfmonServiceLibrary
         {
             lock (_lock)
             {
-                foreach (string categoryName in activeCategories)
+                foreach (string categoryName in subscribers.Select(kvp => kvp.Key.Item1).Distinct())
                 {
                     PerformanceCounterCategory pcc = new PerformanceCounterCategory(categoryName);
                     InstanceDataCollectionCollection idcc = pcc.ReadCategory();
@@ -152,10 +147,10 @@ namespace PerfmonServiceLibrary
                     foreach (InstanceDataCollection idc in idcc.Values)
                     {
                         string counterName = idc.CounterName;
-                        string key = string.Format(@"\{0}\{1}", categoryName, counterName);
+                        Tuple<string, string> tuple = Tuple.Create(categoryName, counterName);
 
                         List<IPerfmonCallback> list;
-                        if (subscribers.TryGetValue(key, out list))
+                        if (subscribers.TryGetValue(tuple, out list))
                         {
                             List<Instance> instances = new List<Instance>();
                             DateTime? timestamp = null;
