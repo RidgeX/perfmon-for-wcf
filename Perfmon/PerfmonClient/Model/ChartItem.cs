@@ -108,15 +108,9 @@ namespace PerfmonClient.Model
 
                         string path = reader.GetAttribute("Path");
 
-                        LineSeries series = new LineSeries()
-                        {
-                            PointGeometrySize = 9,
-                            StrokeThickness = 2,
-                            Title = title,
-                            Stroke = strokeBrush,
-                            Fill = fillBrush,
-                            Values = new ChartValues<MeasureModel>()
-                        };
+                        Series series = MainWindow.CreateSeries(title);
+                        series.Stroke = strokeBrush;
+                        series.Fill = fillBrush;
 
                         SeriesCollection.Add(series);
                         mainWindow.AddCounterListener(path, series);

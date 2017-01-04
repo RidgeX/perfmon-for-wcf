@@ -41,6 +41,9 @@ namespace PerfmonClient
     /// </summary>
     public partial class MainWindow : Window, IPerfmonCallback
     {
+        private const double pointSize = 9;
+        private const double strokeThickness = 2;
+
         private DragAdorner dragAdorner;
         private Point dragStart;
 
@@ -409,14 +412,7 @@ namespace PerfmonClient
                 var instanceItem = (InstanceItem) e.Data.GetData(typeof(InstanceItem));
                 var chart = (CartesianChart) sender;
 
-                LineSeries series = new LineSeries()
-                {
-                    PointGeometrySize = 9,
-                    StrokeThickness = 2,
-                    Title = instanceItem.DisplayName,
-                    Values = new ChartValues<MeasureModel>()
-                };
-
+                Series series = CreateSeries(instanceItem.DisplayName);
                 chart.Series.Add(series);
                 AddCounterListener(instanceItem.Path, series);
             }
@@ -477,6 +473,17 @@ namespace PerfmonClient
                     CounterListeners.Remove(path);
                 }
             }
+        }
+
+        public static Series CreateSeries(string title)
+        {
+            return new LineSeries()
+            {
+                PointGeometrySize = pointSize,
+                StrokeThickness = strokeThickness,
+                Title = title,
+                Values = new ChartValues<MeasureModel>()
+            };
         }
 
         #endregion
