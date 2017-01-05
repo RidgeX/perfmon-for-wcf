@@ -1,6 +1,7 @@
 ﻿using PerfmonServiceLibrary;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
@@ -17,20 +18,20 @@ namespace PerfmonServiceHost
         // Request from client
         public object AfterReceiveRequest(ref Message request, IClientChannel channel, InstanceContext instanceContext)
         {
-            Console.WriteLine(request);
+            //Debug.Print(request.ToString());
             return null;
         }
 
         // Reply to client
         public void BeforeSendReply(ref Message reply, object correlationState)
         {
-            Console.WriteLine(reply);
+            //Debug.Print(reply.ToString());
         }
 
         // Call to client
         public object BeforeSendRequest(ref Message request, IClientChannel channel)
         {
-            Console.WriteLine(request);
+            //Debug.Print(request.ToString());
             return null;
         }
 
@@ -62,10 +63,10 @@ namespace PerfmonServiceHost
 
             try
             {
-                /*
+                #if DEBUG
                 ServiceEndpoint endpoint = selfHost.Description.Endpoints[0];
                 endpoint.EndpointBehaviors.Add(new DebugBehavior());
-                */
+                #endif
 
                 selfHost.Open();
 
