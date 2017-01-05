@@ -38,6 +38,7 @@ namespace PerfmonTestClient
             string address = "net.tcp://localhost:8080/Perfmon/";
             DuplexChannelFactory<IPerfmonService> factory = new DuplexChannelFactory<IPerfmonService>(callback, binding, address);
             IPerfmonService service = factory.CreateChannel();
+            service.Join();
 
             CategoryList categories = service.List();
             categories.Sort((a, b) => a.Name.CompareTo(b.Name));
@@ -53,7 +54,7 @@ namespace PerfmonTestClient
             //service.Subscribe("Memory", "Available MBytes");
             Console.ReadLine();
 
-            ((IClientChannel) service).Close();
+            service.Leave();
         }
     }
 }
