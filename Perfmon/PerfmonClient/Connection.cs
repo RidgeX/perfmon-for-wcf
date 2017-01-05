@@ -93,7 +93,12 @@ namespace PerfmonClient
             var mainWindow = (MainWindow) Application.Current.MainWindow;
 
             CategoryList categories = TryList();
+
             categories.Sort((a, b) => a.Name.CompareTo(b.Name));
+            foreach (Category category in categories)
+            {
+                category.Counters.Sort((a, b) => a.Name.CompareTo(b.Name));
+            }
 
             foreach (Category category in categories)
             {
@@ -218,6 +223,8 @@ namespace PerfmonClient
             {
                 CounterItem counterItem = categoryItem.CounterItems.FirstOrDefault(item => item.Name == counter.Name);
                 if (counterItem == null) continue;
+
+                counter.Instances.Sort((a, b) => a.Name.CompareTo(b.Name));
 
                 foreach (Instance instance in counter.Instances)
                 {
