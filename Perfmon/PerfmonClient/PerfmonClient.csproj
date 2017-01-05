@@ -113,6 +113,7 @@
     <Compile Include="Model\MeasureModel.cs" />
     <Compile Include="Model\Tab.cs" />
     <Compile Include="UI\Converters\LineSeriesBrushConverter.cs" />
+    <Compile Include="UI\Converters\StringToVisibilityConverter.cs" />
     <Compile Include="UI\DragAdorner.cs" />
     <Compile Include="UI\GridHelpers.cs" />
     <Compile Include="MainWindow.xaml.cs">

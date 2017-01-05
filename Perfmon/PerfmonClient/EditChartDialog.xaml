@@ -69,6 +69,23 @@
                     </ListView.Style>
                 </ListView>
             </TabItem>
+            <TabItem Header="Settings">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Label Grid.Row="0" Grid.Column="0">Title:</Label>
+                    <TextBox x:Name="titleTextBox" Grid.Row="0" Grid.Column="1">
+                        <TextBox.Text>
+                            <Binding Path="Title" UpdateSourceTrigger="PropertyChanged" />
+                        </TextBox.Text>
+                    </TextBox>
+                </Grid>
+            </TabItem>
         </TabControl>
         <StackPanel Grid.Row="1" HorizontalAlignment="Right" Margin="5" Orientation="Horizontal">
             <Button x:Name="okButton" Click="okButton_Click" IsDefault="True"

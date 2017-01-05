@@ -18,9 +18,19 @@ namespace PerfmonClient.Model
 {
     public class ChartItem : INotifyPropertyChanged, IXmlSerializable
     {
+        private string title;
         private double axisMax;
         private double axisMin;
 
+        public string Title
+        {
+            get { return title; }
+            set
+            {
+                title = value;
+                OnPropertyChanged("Title");
+            }
+        }
         public int Row { get; set; }
         public int Column { get; set; }
 
@@ -56,6 +66,7 @@ namespace PerfmonClient.Model
 
         public ChartItem(int row, int col)
         {
+            Title = string.Empty;
             Row = row;
             Column = col;
 
@@ -91,6 +102,7 @@ namespace PerfmonClient.Model
 
             if (reader.MoveToContent() == XmlNodeType.Element && reader.LocalName.Equals("ChartItem"))
             {
+                Title = reader.GetAttribute("Title");
                 Row = int.Parse(reader.GetAttribute("Row"));
                 Column = int.Parse(reader.GetAttribute("Column"));
 
@@ -98,7 +110,7 @@ namespace PerfmonClient.Model
                 {
                     while (reader.MoveToContent() == XmlNodeType.Element && reader.LocalName.Equals("Series"))
                     {
-                        string title = reader.GetAttribute("Title");
+                        string name = reader.GetAttribute("Name");
 
                         var color = (Color) ColorConverter.ConvertFromString(reader.GetAttribute("Color"));
                         LineSeriesBrushConverter brushConverter = new LineSeriesBrushConverter();
@@ -108,7 +120,7 @@ namespace PerfmonClient.Model
 
                         string path = reader.GetAttribute("Path");
 
-                        Series series = MainWindow.CreateSeries(title);
+                        Series series = MainWindow.CreateSeries(name);
                         series.Stroke = strokeBrush;
                         series.Fill = fillBrush;
 
@@ -127,6 +139,7 @@ namespace PerfmonClient.Model
         {
             var mainWindow = (MainWindow) Application.Current.MainWindow;
 
+            writer.WriteAttributeString("Title", Title);
             writer.WriteAttributeString("Row", Row.ToString());
             writer.WriteAttributeString("Column", Column.ToString());
 
@@ -134,7 +147,7 @@ namespace PerfmonClient.Model
             {
                 writer.WriteStartElement("Series");
 
-                writer.WriteAttributeString("Title", series.Title);
+                writer.WriteAttributeString("Name", series.Title);
 
                 LineSeriesBrushConverter brushConverter = new LineSeriesBrushConverter();
                 var color = (Color) brushConverter.Convert(new object[] { series.Stroke, series.Fill }, typeof(Color), null, CultureInfo.InvariantCulture);
