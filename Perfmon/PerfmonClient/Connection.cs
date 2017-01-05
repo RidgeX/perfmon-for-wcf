@@ -224,6 +224,18 @@ namespace PerfmonClient
                 CounterItem counterItem = categoryItem.CounterItems.FirstOrDefault(item => item.Name == counter.Name);
                 if (counterItem == null) continue;
 
+                if (!counter.Instances.Any())
+                {
+                    if (!counterItem.InstanceItems.Contains(MainWindow.NoneItem))
+                    {
+                        counterItem.InstanceItems.Add(MainWindow.NoneItem);
+                    }
+                }
+                else
+                {
+                    counterItem.InstanceItems.Remove(MainWindow.NoneItem);
+                }
+
                 counter.Instances.Sort((a, b) => a.Name.CompareTo(b.Name));
 
                 foreach (Instance instance in counter.Instances)

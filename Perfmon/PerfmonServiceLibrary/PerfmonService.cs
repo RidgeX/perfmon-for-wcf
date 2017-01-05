@@ -230,7 +230,13 @@ namespace PerfmonServiceLibrary
                             prevSamples[path] = sample;
                         }
 
-                        if (instances.Count == 0) continue;
+                        // If there are instances available but we don't have a previous sample
+                        // to calculate their value, then don't send anything to the client yet
+                        if (idc.Count > 0 && instances.Count == 0) continue;
+
+                        // Otherwise let the client know that there are no instances by sending
+                        // an empty list with the current time
+                        if (timestamp == null) timestamp = DateTime.Now;
 
                         Counter counter = new Counter() { Name = counterName, Instances = instances };
                         Category category = new Category() { Name = categoryName, Counters = new List<Counter>() { counter } };

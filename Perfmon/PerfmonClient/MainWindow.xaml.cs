@@ -47,6 +47,8 @@ namespace PerfmonClient
         private Point dragStart;
         private GridLength savedWidth;
 
+        public static readonly InstanceItem NoneItem = new InstanceItem("(none)", null);
+
         public ObservableCollection<CategoryItem> CategoryItems { get; set; }
         public Dictionary<string, List<Series>> CounterListeners { get; set; }
         public ObservableCollection<Tab> Tabs { get; set; }
@@ -293,8 +295,7 @@ namespace PerfmonClient
         {
             var item = (Item) treeView.SelectedItem;
 
-            // Only allow instance items to be dragged
-            if (item != null && item is InstanceItem && e.LeftButton == MouseButtonState.Pressed)
+            if (item != null && item is InstanceItem && item != NoneItem && e.LeftButton == MouseButtonState.Pressed)
             {
                 Vector offset = e.GetPosition(null) - dragStart;
 
