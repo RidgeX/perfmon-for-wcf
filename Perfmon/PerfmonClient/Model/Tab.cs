@@ -53,12 +53,11 @@ namespace PerfmonClient.Model
             ChartItems = new ObservableCollection<ChartItem>();
         }
 
-        public Tab(string name, int rows, int cols)
+        public Tab(string name, int rows, int cols) : this()
         {
             Name = name;
             Rows = rows;
             Columns = cols;
-            ChartItems = new ObservableCollection<ChartItem>();
 
             Initialize();
         }

@@ -19,8 +19,8 @@ namespace PerfmonClient.Model
     public class ChartItem : INotifyPropertyChanged, IXmlSerializable
     {
         private string title;
-        private double axisMax;
-        private double axisMin;
+        private double maxX, minX;
+        private double maxY, minY;
 
         public string Title
         {
@@ -37,43 +37,61 @@ namespace PerfmonClient.Model
         public SeriesCollection SeriesCollection { get; set; }
         public Func<double, string> DateTimeFormatter { get; set; }
         public double AxisStep { get; set; }
-        public double AxisMax
+        public double MaxX
         {
-            get { return axisMax; }
+            get { return maxX; }
             set
             {
-                axisMax = value;
-                OnPropertyChanged("AxisMax");
+                maxX = value;
+                OnPropertyChanged("MaxX");
             }
         }
-        public double AxisMin
+        public double MinX
         {
-            get { return axisMin; }
+            get { return minX; }
             set
             {
-                axisMin = value;
-                OnPropertyChanged("AxisMin");
+                minX = value;
+                OnPropertyChanged("MinX");
+            }
+        }
+        public double MaxY
+        {
+            get { return maxY; }
+            set
+            {
+                maxY = value;
+                OnPropertyChanged("MaxY");
+            }
+        }
+        public double MinY
+        {
+            get { return minY; }
+            set
+            {
+                minY = value;
+                OnPropertyChanged("MinY");
             }
         }
 
         public ChartItem()
         {
             SeriesCollection = new SeriesCollection();
-            DateTimeFormatter = ticks => new DateTime((long) ticks).ToString("mm:ss");
+            DateTimeFormatter = ticks =>
+                (ticks >= DateTime.MinValue.Ticks && ticks <= DateTime.MaxValue.Ticks) ?
+                new DateTime((long) ticks).ToString("mm:ss") : string.Empty;
             AxisStep = TimeSpan.FromSeconds(1).Ticks;
+            MaxX = MinX = MaxY = double.NaN;
+            MinY = 0;
+
             SetAxisLimits(DateTime.Now);
         }
 
-        public ChartItem(int row, int col)
+        public ChartItem(int row, int col) : this()
         {
             Title = string.Empty;
             Row = row;
             Column = col;
-
-            SeriesCollection = new SeriesCollection();
-            DateTimeFormatter = ticks => new DateTime((long) ticks).ToString("mm:ss");
-            AxisStep = TimeSpan.FromSeconds(1).Ticks;
-            SetAxisLimits(DateTime.Now);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -88,8 +106,8 @@ namespace PerfmonClient.Model
 
         public void SetAxisLimits(DateTime timestamp)
         {
-            AxisMax = timestamp.Ticks + TimeSpan.FromSeconds(1).Ticks;
-            AxisMin = timestamp.Ticks - TimeSpan.FromSeconds(8).Ticks;
+            MaxX = timestamp.Ticks + TimeSpan.FromSeconds(1).Ticks;
+            MinX = timestamp.Ticks - TimeSpan.FromSeconds(8).Ticks;
         }
 
         #region Serialization

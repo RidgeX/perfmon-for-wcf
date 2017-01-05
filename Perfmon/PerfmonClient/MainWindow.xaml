@@ -86,14 +86,14 @@
                                             </lvc:CartesianChart.ContextMenu>
                                             <lvc:CartesianChart.AxisX>
                                                 <lvc:Axis LabelFormatter="{Binding DateTimeFormatter}"
-                                                          MaxValue="{Binding AxisMax}" MinValue="{Binding AxisMin}">
+                                                          MaxValue="{Binding MaxX}" MinValue="{Binding MinX}">
                                                     <lvc:Axis.Separator>
                                                         <lvc:Separator Step="{Binding AxisStep}" />
                                                     </lvc:Axis.Separator>
                                                 </lvc:Axis>
                                             </lvc:CartesianChart.AxisX>
                                             <lvc:CartesianChart.AxisY>
-                                                <lvc:Axis MinValue="0" />
+                                                <lvc:Axis MaxValue="{Binding MaxY}" MinValue="{Binding MinY}" />
                                             </lvc:CartesianChart.AxisY>
                                         </lvc:CartesianChart>
                                     </DockPanel>
