@@ -32,8 +32,12 @@
                 <Separator />
                 <MenuItem Header="_Quit" Click="quitMenuItem_Click" />
             </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="_Show browser" IsCheckable="True" IsChecked="True"
+                          Checked="showBrowserMenuItem_Checked" Unchecked="showBrowserMenuItem_Unchecked" />
+            </MenuItem>
         </Menu>
-        <Grid DockPanel.Dock="Left">
+        <Grid x:Name="grid" DockPanel.Dock="Left">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="3*" />
                 <ColumnDefinition Width="Auto" />
@@ -95,7 +99,7 @@
                     </DataTemplate>
                 </TabControl.ContentTemplate>
             </TabControl>
-            <GridSplitter Grid.Column="1" HorizontalAlignment="Center" Width="4" />
+            <GridSplitter x:Name="gridSplitter" Grid.Column="1" HorizontalAlignment="Center" Width="4" />
             <TreeView x:Name="treeView" Grid.Column="2" ItemsSource="{Binding CategoryItems}"
                       PreviewMouseLeftButtonDown="treeView_PreviewMouseLeftButtonDown"
                       PreviewMouseMove="treeView_PreviewMouseMove">

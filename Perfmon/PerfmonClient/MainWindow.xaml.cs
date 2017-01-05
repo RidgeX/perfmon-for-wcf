@@ -45,11 +45,12 @@ namespace PerfmonClient
 
         private DragAdorner dragAdorner;
         private Point dragStart;
+        private GridLength savedWidth;
 
-        public Connection Connection { get; set; }
         public ObservableCollection<CategoryItem> CategoryItems { get; set; }
         public Dictionary<string, List<Series>> CounterListeners { get; set; }
         public ObservableCollection<Tab> Tabs { get; set; }
+        public Connection Connection { get; set; }
 
         public MainWindow()
         {
@@ -228,6 +229,33 @@ namespace PerfmonClient
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             Connection.Close();
+        }
+
+        #endregion
+
+        #region Show/Hide Counter Browser
+
+        private void showBrowserMenuItem_Checked(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+
+            gridSplitter.Visibility = Visibility.Visible;
+
+            ColumnDefinition lastColumn = grid.ColumnDefinitions.Last();
+            lastColumn.Width = savedWidth;
+
+            treeView.Visibility = Visibility.Visible;
+        }
+
+        private void showBrowserMenuItem_Unchecked(object sender, RoutedEventArgs e)
+        {
+            treeView.Visibility = Visibility.Collapsed;
+
+            ColumnDefinition lastColumn = grid.ColumnDefinitions.Last();
+            savedWidth = lastColumn.Width;
+            lastColumn.Width = GridLength.Auto;
+
+            gridSplitter.Visibility = Visibility.Collapsed;
         }
 
         #endregion
