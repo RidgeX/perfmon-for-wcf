@@ -385,6 +385,18 @@ namespace PerfmonClient
 
         #endregion
 
+        #region Disconnect Server
+
+        private void disconnectMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var machineItem = (MachineItem) (sender as MenuItem).DataContext;
+            Connection conn = Connections.First(c => c.MachineItem == machineItem);
+            conn.Close();
+            Connections.Remove(conn);
+        }
+
+        #endregion
+
         #region Helper Methods
 
         public void AddCounterListener(string path, Series series)

@@ -126,7 +126,13 @@
                 </TreeView.ItemContainerStyle>
                 <TreeView.Resources>
                     <HierarchicalDataTemplate DataType="{x:Type model:MachineItem}" ItemsSource="{Binding CategoryItems}">
-                        <TextBlock Text="{Binding Name}" />
+                        <TextBlock Text="{Binding Name}">
+                            <TextBlock.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Disconnect" Click="disconnectMenuItem_Click" />
+                                </ContextMenu>
+                            </TextBlock.ContextMenu>
+                        </TextBlock>
                     </HierarchicalDataTemplate>
                     <HierarchicalDataTemplate DataType="{x:Type model:CategoryItem}" ItemsSource="{Binding CounterItems}">
                         <TextBlock Text="{Binding Name}" />
