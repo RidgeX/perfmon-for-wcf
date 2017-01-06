@@ -91,6 +91,10 @@ namespace PerfmonServiceLibrary
 
         public void Refresh()
         {
+            #if DEBUG
+            Console.WriteLine("Refresh()");
+            #endif
+
             categories.Clear();
         }
 

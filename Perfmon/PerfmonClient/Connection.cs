@@ -13,6 +13,7 @@ namespace PerfmonClient
 {
     public class Connection : IPerfmonCallback
     {
+        private bool ignoreCheckedEvent;
         private DuplexChannelFactory<IPerfmonService> factory;
         private IPerfmonService service;
 
@@ -22,11 +23,12 @@ namespace PerfmonClient
         {
             MachineItem = new MachineItem(host);
 
+            ignoreCheckedEvent = false;
+
             NetTcpBinding binding = new NetTcpBinding();
             binding.MaxReceivedMessageSize = int.MaxValue;
             binding.Security.Mode = SecurityMode.None;
             string address = string.Format("net.tcp://{0}:{1}/Perfmon/", host, port);
-
             factory = new DuplexChannelFactory<IPerfmonService>(this, binding, address);
 
             service = factory.CreateChannel();
@@ -134,12 +136,13 @@ namespace PerfmonClient
                 }
             }
 
+            MachineItem.CategoryItems.Clear();
             mainWindow.MachineItems.Remove(MachineItem);
         }
 
         private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == "IsChecked")
+            if (e.PropertyName == "IsChecked" && !ignoreCheckedEvent)
             {
                 CounterItem counterItem = (CounterItem) sender;
 
@@ -174,6 +177,38 @@ namespace PerfmonClient
         {
             ClearTreeView();
             TryLeave();
+        }
+
+        public void Refresh()
+        {
+            var activeCounters = new HashSet<Tuple<string, string>>();
+
+            foreach (CategoryItem categoryItem in MachineItem.CategoryItems)
+            {
+                foreach (CounterItem counterItem in categoryItem.CounterItems)
+                {
+                    if (counterItem.IsChecked == true)
+                    {
+                        activeCounters.Add(Tuple.Create(categoryItem.Name, counterItem.Name));
+                    }
+                }
+            }
+
+            ClearTreeView();
+            TryRefresh();
+            PopulateTreeView();
+
+            foreach (Tuple<string, string> tuple in activeCounters)
+            {
+                CategoryItem categoryItem = MachineItem.CategoryItems.FirstOrDefault(item => item.Name == tuple.Item1);
+                if (categoryItem == null) continue;
+                CounterItem counterItem = categoryItem.CounterItems.FirstOrDefault(item => item.Name == tuple.Item2);
+                if (counterItem == null) continue;
+
+                ignoreCheckedEvent = true;
+                counterItem.IsChecked = true;
+                ignoreCheckedEvent = false;
+            }
         }
 
         public void OnFault(object sender, EventArgs e)

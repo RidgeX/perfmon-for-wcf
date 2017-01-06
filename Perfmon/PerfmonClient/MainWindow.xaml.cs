@@ -385,7 +385,14 @@ namespace PerfmonClient
 
         #endregion
 
-        #region Disconnect Server
+        #region Refresh/Disconnect Server
+
+        private void refreshMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var machineItem = (MachineItem) (sender as MenuItem).DataContext;
+            Connection conn = Connections.First(c => c.MachineItem == machineItem);
+            conn.Refresh();
+        }
 
         private void disconnectMenuItem_Click(object sender, RoutedEventArgs e)
         {
