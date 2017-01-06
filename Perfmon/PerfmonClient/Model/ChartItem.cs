@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -137,6 +138,35 @@ namespace PerfmonClient.Model
                         var fillBrush = (SolidColorBrush) brushes[1];
 
                         string path = reader.GetAttribute("Path");
+
+                        Match match = Regex.Match(path, @"^\\\\(.*)\\(.*)\((.*)\)\\(.*)$");
+                        if (!match.Success)
+                        {
+                            throw new InvalidOperationException("Invalid counter path");
+                        }
+                        string[] machineName = match.Groups[1].Value.Split(':');
+                        string host = machineName[0];
+                        int port = int.Parse(machineName[1]);
+                        string categoryName = match.Groups[2].Value;
+                        string counterName = match.Groups[4].Value;
+
+                        Connection conn = mainWindow.Connections.FirstOrDefault(c => c.Host == host && c.Port == port);
+                        if (conn == null)
+                        {
+                            conn = new Connection(host, port);
+                            mainWindow.Connections.Add(conn);
+                            conn.Open();
+                        }
+
+                        CategoryItem categoryItem = conn.MachineItem.CategoryItems.FirstOrDefault(item => item.Name == categoryName);
+                        if (categoryItem != null)
+                        {
+                            CounterItem counterItem = categoryItem.CounterItems.FirstOrDefault(item => item.Name == counterName);
+                            if (counterItem != null && counterItem.IsChecked == false)
+                            {
+                                counterItem.IsChecked = true;
+                            }
+                        }
 
                         Series series = MainWindow.CreateSeries(name);
                         series.Stroke = strokeBrush;

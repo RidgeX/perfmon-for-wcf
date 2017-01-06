@@ -17,11 +17,15 @@ namespace PerfmonClient
         private DuplexChannelFactory<IPerfmonService> factory;
         private IPerfmonService service;
 
+        public string Host { get; set; }
+        public int Port { get; set; }
         public MachineItem MachineItem { get; set; }
 
         public Connection(string host, int port)
         {
-            MachineItem = new MachineItem(host);
+            Host = host;
+            Port = port;
+            MachineItem = new MachineItem(host, port);
 
             ignoreCheckedEvent = false;
 

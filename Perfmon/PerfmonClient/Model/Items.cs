@@ -48,9 +48,9 @@ namespace PerfmonClient.Model
         public string Name { get; set; }
         public ObservableCollection<CategoryItem> CategoryItems { get; set; }
 
-        public MachineItem(string name)
+        public MachineItem(string host, int port)
         {
-            Name = name;
+            Name = string.Join(":", host, port);
             CategoryItems = new ObservableCollection<CategoryItem>();
         }
     }
@@ -131,7 +131,7 @@ namespace PerfmonClient.Model
                     return string.Empty;
                 }
 
-                // ("localhost", "Processor", "% Processor Time", "_Total") => "\\localhost\Processor(_Total)\% Processor Time"
+                // ("localhost:8080", "Processor", "% Processor Time", "_Total") => "\\localhost:8080\Processor(_Total)\% Processor Time"
                 return string.Format(@"\\{0}\{1}({2})\{3}", Parent.Parent.Parent.Name, Parent.Parent.Name, Name, Parent.Name);
             }
         }
