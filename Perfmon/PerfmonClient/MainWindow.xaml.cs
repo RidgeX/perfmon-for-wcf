@@ -444,28 +444,33 @@ namespace PerfmonClient
             };
         }
 
+        public string FindSeries(Series series)
+        {
+            return CounterListeners.Where(kvp => kvp.Value.Contains(series)).Select(kvp => kvp.Key).First();
+        }
+
         public void UpdateSeries(string path, DateTime timestamp, float value)
         {
+            MeasureModel newValue = new MeasureModel(timestamp, value);
+
             List<Series> listeners;
             if (CounterListeners.TryGetValue(path, out listeners))
             {
                 foreach (Series series in listeners)
                 {
-                    series.Values.Add(new MeasureModel(timestamp, value));
+                    IChartValues values = series.Values;
+                    values.Add(newValue);
 
+                    // Update axis limits if chart is visible
                     if (series.DataContext != BindingOperations.DisconnectedSource)
                     {
                         var chartItem = (ChartItem) series.DataContext;
-
-                        if (chartItem != null)
-                        {
-                            chartItem.SetAxisLimits(timestamp);
-                        }
+                        chartItem?.SetAxisLimits(timestamp);
                     }
 
-                    if (series.Values.Count > maxPointsPerChart)
+                    if (values.Count > maxPointsPerChart)
                     {
-                        series.Values.RemoveAt(0);
+                        values.RemoveAt(0);
                     }
                 }
             }

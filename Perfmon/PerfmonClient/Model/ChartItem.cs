@@ -171,7 +171,7 @@ namespace PerfmonClient.Model
                 var color = (Color) brushConverter.Convert(new object[] { series.Stroke, series.Fill }, typeof(Color), null, CultureInfo.InvariantCulture);
                 writer.WriteAttributeString("Color", color.ToString());
 
-                string path = mainWindow.CounterListeners.Where(kvp => kvp.Value.Contains(series)).Select(kvp => kvp.Key).First();
+                string path = mainWindow.FindSeries(series);
                 writer.WriteAttributeString("Path", path);
 
                 writer.WriteEndElement();
