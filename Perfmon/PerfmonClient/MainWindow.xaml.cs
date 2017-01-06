@@ -49,10 +49,10 @@ namespace PerfmonClient
 
         public static readonly InstanceItem NoneItem = new InstanceItem("(none)", null);
 
-        public ObservableCollection<CategoryItem> CategoryItems { get; set; }
+        public ObservableCollection<MachineItem> MachineItems { get; set; }
         public Dictionary<string, List<Series>> CounterListeners { get; set; }
         public ObservableCollection<Tab> Tabs { get; set; }
-        public Connection Connection { get; set; }
+        public List<Connection> Connections { get; set; }
 
         public MainWindow()
         {
@@ -64,7 +64,7 @@ namespace PerfmonClient
                 .Y(model => model.Value);
             Charting.For<MeasureModel>(mapper);
 
-            CategoryItems = new ObservableCollection<CategoryItem>();
+            MachineItems = new ObservableCollection<MachineItem>();
             CounterListeners = new Dictionary<string, List<Series>>();
 
             Tabs = new ObservableCollection<Tab>();
@@ -72,8 +72,10 @@ namespace PerfmonClient
             Tabs.Add(tab);
             tabControl.SelectedItem = tab;
 
-            Connection = new Connection("localhost", 8080);
-            Connection.Open();
+            Connections = new List<Connection>();
+            Connection conn = new Connection("localhost", 8080);
+            Connections.Add(conn);
+            conn.Open();
         }
 
         #region New Tab
@@ -230,7 +232,11 @@ namespace PerfmonClient
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            Connection.Close();
+            foreach (Connection conn in Connections.ToList())
+            {
+                conn.Close();
+                Connections.Remove(conn);
+            }
         }
 
         #endregion

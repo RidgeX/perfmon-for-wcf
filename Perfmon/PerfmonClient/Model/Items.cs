@@ -43,14 +43,28 @@ namespace PerfmonClient.Model
         }
     }
 
+    public class MachineItem : Item
+    {
+        public string Name { get; set; }
+        public ObservableCollection<CategoryItem> CategoryItems { get; set; }
+
+        public MachineItem(string name)
+        {
+            Name = name;
+            CategoryItems = new ObservableCollection<CategoryItem>();
+        }
+    }
+
     public class CategoryItem : Item
     {
         public string Name { get; set; }
+        public MachineItem Parent { get; set; }
         public ObservableCollection<CounterItem> CounterItems { get; set; }
 
-        public CategoryItem(string name)
+        public CategoryItem(string name, MachineItem parent)
         {
             Name = name;
+            Parent = parent;
             CounterItems = new ObservableCollection<CounterItem>();
         }
     }
@@ -89,7 +103,10 @@ namespace PerfmonClient.Model
         {
             get
             {
-                if (Parent == null) return string.Empty;
+                if (Parent == null)
+                {
+                    return string.Empty;
+                }
 
                 // ("Available MBytes", "*") => "Available MBytes"
                 // ("% Processor Time", "_Total") => "% Processor Time (_Total)"
@@ -109,10 +126,13 @@ namespace PerfmonClient.Model
         {
             get
             {
-                if (Parent == null || Parent.Parent == null) return string.Empty;
+                if (Parent == null || Parent.Parent == null || Parent.Parent.Parent == null)
+                {
+                    return string.Empty;
+                }
 
-                // ("Processor", "% Processor Time", "_Total") => "\Processor(_Total)\% Processor Time"
-                return string.Format(@"\{0}({1})\{2}", Parent.Parent.Name, Name, Parent.Name);
+                // ("localhost", "Processor", "% Processor Time", "_Total") => "\\localhost\Processor(_Total)\% Processor Time"
+                return string.Format(@"\\{0}\{1}({2})\{3}", Parent.Parent.Parent.Name, Parent.Parent.Name, Name, Parent.Name);
             }
         }
 

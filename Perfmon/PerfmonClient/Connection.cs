@@ -16,14 +16,19 @@ namespace PerfmonClient
         private DuplexChannelFactory<IPerfmonService> factory;
         private IPerfmonService service;
 
+        public MachineItem MachineItem { get; set; }
+
         public Connection(string host, int port)
         {
+            MachineItem = new MachineItem(host);
+
             NetTcpBinding binding = new NetTcpBinding();
             binding.MaxReceivedMessageSize = int.MaxValue;
             binding.Security.Mode = SecurityMode.None;
             string address = string.Format("net.tcp://{0}:{1}/Perfmon/", host, port);
 
             factory = new DuplexChannelFactory<IPerfmonService>(this, binding, address);
+
             service = factory.CreateChannel();
             ((IClientChannel) service).Faulted += OnFault;
         }
@@ -102,7 +107,7 @@ namespace PerfmonClient
 
             foreach (Category category in categories)
             {
-                CategoryItem categoryItem = new CategoryItem(category.Name);
+                CategoryItem categoryItem = new CategoryItem(category.Name, MachineItem);
 
                 foreach (Counter counter in category.Counters)
                 {
@@ -111,15 +116,17 @@ namespace PerfmonClient
                     categoryItem.CounterItems.Add(counterItem);
                 }
 
-                mainWindow.CategoryItems.Add(categoryItem);
+                MachineItem.CategoryItems.Add(categoryItem);
             }
+
+            mainWindow.MachineItems.Add(MachineItem);
         }
 
         private void ClearTreeView()
         {
             var mainWindow = (MainWindow) Application.Current.MainWindow;
 
-            foreach (CategoryItem categoryItem in mainWindow.CategoryItems)
+            foreach (CategoryItem categoryItem in MachineItem.CategoryItems)
             {
                 foreach (CounterItem counterItem in categoryItem.CounterItems)
                 {
@@ -127,7 +134,7 @@ namespace PerfmonClient
                 }
             }
 
-            mainWindow.CategoryItems.Clear();
+            mainWindow.MachineItems.Remove(MachineItem);
         }
 
         private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -165,6 +172,7 @@ namespace PerfmonClient
 
         public void Close()
         {
+            ClearTreeView();
             TryLeave();
         }
 
@@ -186,7 +194,7 @@ namespace PerfmonClient
                     {
                         service.Join();
 
-                        foreach (CategoryItem categoryItem in mainWindow.CategoryItems)
+                        foreach (CategoryItem categoryItem in MachineItem.CategoryItems)
                         {
                             foreach (CounterItem counterItem in categoryItem.CounterItems)
                             {
@@ -205,6 +213,7 @@ namespace PerfmonClient
                 else
                 {
                     ClearTreeView();
+                    mainWindow.Connections.Remove(this);
                 }
             });
         }
@@ -216,7 +225,7 @@ namespace PerfmonClient
             Category category = e.Category;
             DateTime timestamp = e.Timestamp;
 
-            CategoryItem categoryItem = mainWindow.CategoryItems.FirstOrDefault(item => item.Name == category.Name);
+            CategoryItem categoryItem = MachineItem.CategoryItems.FirstOrDefault(item => item.Name == category.Name);
             if (categoryItem == null) return;
 
             foreach (Counter counter in category.Counters)
