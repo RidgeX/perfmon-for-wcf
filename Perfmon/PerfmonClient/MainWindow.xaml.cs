@@ -28,6 +28,7 @@ namespace PerfmonClient
 {
     public static class CustomCommands
     {
+        public static readonly RoutedCommand ConnectTo = new RoutedCommand();
         public static readonly RoutedCommand NewTab = new RoutedCommand();
         public static readonly RoutedCommand SaveTab = new RoutedCommand();
         public static readonly RoutedCommand LoadTab = new RoutedCommand();
@@ -73,10 +74,34 @@ namespace PerfmonClient
             tabControl.SelectedItem = tab;
 
             Connections = new List<Connection>();
+
+            /*
             Connection conn = new Connection("localhost", 8080);
             Connections.Add(conn);
             conn.Open();
+            */
         }
+
+        #region Connect To
+
+        private void connectToMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            ConnectDialog dialog = new ConnectDialog();
+            dialog.Owner = this;
+            dialog.ShowDialog();
+
+            if (dialog.DialogResult == true)
+            {
+                string host = dialog.Host;
+                int port = dialog.Port;
+
+                Connection conn = new Connection(host, port);
+                Connections.Add(conn);
+                conn.Open();
+            }
+        }
+
+        #endregion
 
         #region New Tab
 
@@ -404,7 +429,7 @@ namespace PerfmonClient
 
         #endregion
 
-        #region Helper Methods
+        #region Chart Helper Methods
 
         public void AddCounterListener(string path, Series series)
         {

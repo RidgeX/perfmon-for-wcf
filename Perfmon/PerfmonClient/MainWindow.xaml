@@ -12,12 +12,14 @@
         Title="Performance Monitor" Width="1024" Height="576"
         Closing="Window_Closing">
     <Window.CommandBindings>
+        <CommandBinding Command="local:CustomCommands.ConnectTo" Executed="connectToMenuItem_Click" />
         <CommandBinding Command="local:CustomCommands.NewTab" Executed="newTabMenuItem_Click" />
         <CommandBinding Command="local:CustomCommands.SaveTab" Executed="saveTabMenuItem_Click" />
         <CommandBinding Command="local:CustomCommands.LoadTab" Executed="loadTabMenuItem_Click" />
         <CommandBinding Command="local:CustomCommands.CloseTab" Executed="closeTabMenuItem_Click" />
     </Window.CommandBindings>
     <Window.InputBindings>
+        <KeyBinding Key="C" Modifiers="Ctrl" Command="local:CustomCommands.ConnectTo" />
         <KeyBinding Key="T" Modifiers="Ctrl" Command="local:CustomCommands.NewTab" />
         <KeyBinding Key="S" Modifiers="Ctrl" Command="local:CustomCommands.SaveTab" />
         <KeyBinding Key="L" Modifiers="Ctrl" Command="local:CustomCommands.LoadTab" />
@@ -29,6 +31,8 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
+                <MenuItem Header="_Connect To..." Click="connectToMenuItem_Click" InputGestureText="Ctrl+C" />
+                <Separator />
                 <MenuItem Header="_New Tab..." Click="newTabMenuItem_Click" InputGestureText="Ctrl+T" />
                 <MenuItem Header="_Save Tab..." Click="saveTabMenuItem_Click" InputGestureText="Ctrl+S" />
                 <MenuItem Header="_Load Tab..." Click="loadTabMenuItem_Click" InputGestureText="Ctrl+L" />
