@@ -39,24 +39,6 @@ namespace PerfmonClient
             ((IClientChannel) service).Faulted += OnFault;
         }
 
-        private void TryJoin()
-        {
-            try
-            {
-                service.Join();
-            }
-            catch (CommunicationException) { }
-        }
-
-        private void TryLeave()
-        {
-            try
-            {
-                service.Leave();
-            }
-            catch (CommunicationException) { }
-        }
-
         private CategoryList TryList()
         {
             try
@@ -173,14 +155,22 @@ namespace PerfmonClient
 
         public void Open()
         {
-            TryJoin();
-            PopulateTreeView();
+            try
+            {
+                service.Join();
+                PopulateTreeView();
+            }
+            catch (CommunicationException) { }
         }
 
         public void Close()
         {
-            ClearTreeView();
-            TryLeave();
+            try
+            {
+                ClearTreeView();
+                service.Leave();
+            }
+            catch (CommunicationException) { }
         }
 
         public void Refresh()
