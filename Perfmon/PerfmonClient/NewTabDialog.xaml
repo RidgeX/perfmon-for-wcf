@@ -20,7 +20,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Label Grid.Row="0" Grid.Column="0">Name:</Label>
-        <TextBox x:Name="nameTextBox" Grid.Row="0" Grid.Column="1">
+        <TextBox x:Name="nameTextBox" Grid.Row="0" Grid.Column="1" MaxLength="64">
             <TextBox.Text>
                 <Binding Path="TabName" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
                     <Binding.ValidationRules>
