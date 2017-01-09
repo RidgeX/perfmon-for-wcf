@@ -22,6 +22,7 @@ namespace PerfmonClient.Model
         private string title;
         private double maxX, minX;
         private double maxY, minY;
+        private IChartTooltip dataTooltip;
 
         public string Title
         {
@@ -74,6 +75,20 @@ namespace PerfmonClient.Model
                 OnPropertyChanged("MinY");
             }
         }
+        public bool Hoverable
+        {
+            get { return dataTooltip != null; }
+        }
+        public IChartTooltip DataTooltip
+        {
+            get { return dataTooltip; }
+            set
+            {
+                dataTooltip = value;
+                OnPropertyChanged("DataTooltip");
+                OnPropertyChanged("Hoverable");
+            }
+        }
 
         public ChartItem()
         {
@@ -84,6 +99,7 @@ namespace PerfmonClient.Model
             AxisStep = TimeSpan.FromSeconds(1).Ticks;
             MaxX = MinX = MaxY = double.NaN;
             MinY = 0;
+            DataTooltip = null;
 
             SetAxisLimits(DateTime.Now);
         }

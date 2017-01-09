@@ -41,8 +41,10 @@
                 <MenuItem Header="_Quit" Click="quitMenuItem_Click" />
             </MenuItem>
             <MenuItem Header="_View">
-                <MenuItem Header="_Show browser" IsCheckable="True" IsChecked="True"
+                <MenuItem Header="Show _browser" IsCheckable="True" IsChecked="True"
                           Checked="showBrowserMenuItem_Checked" Unchecked="showBrowserMenuItem_Unchecked" />
+                <MenuItem Header="Show _tooltips" IsCheckable="True" IsChecked="False"
+                          Checked="showTooltipsMenuItem_Checked" Unchecked="showTooltipsMenuItem_Unchecked" />
             </MenuItem>
         </Menu>
         <Grid x:Name="grid" DockPanel.Dock="Left">
@@ -81,6 +83,7 @@
                                                    Visibility="{Binding Title, Converter={StaticResource StringToVisibilityConverter}}" />
                                         <lvc:CartesianChart DockPanel.Dock="Left"
                                                             AllowDrop="True" Drop="CartesianChart_Drop"
+                                                            DataTooltip="{Binding DataTooltip}" Hoverable="{Binding Hoverable}"
                                                             LegendLocation="Top" Series="{Binding SeriesCollection}">
                                             <lvc:CartesianChart.ContextMenu>
                                                 <ContextMenu>

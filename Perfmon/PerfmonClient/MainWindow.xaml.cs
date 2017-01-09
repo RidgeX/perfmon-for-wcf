@@ -295,6 +295,32 @@ namespace PerfmonClient
 
         #endregion
 
+        #region Show/Hide Chart Tooltips
+
+        private void showTooltipsMenuItem_Checked(object sender, RoutedEventArgs e)
+        {
+            foreach (Tab tab in Tabs)
+            {
+                foreach (ChartItem chartItem in tab.ChartItems)
+                {
+                    chartItem.DataTooltip = new DefaultTooltip();
+                }
+            }
+        }
+
+        private void showTooltipsMenuItem_Unchecked(object sender, RoutedEventArgs e)
+        {
+            foreach (Tab tab in Tabs)
+            {
+                foreach (ChartItem chartItem in tab.ChartItems)
+                {
+                    chartItem.DataTooltip = null;
+                }
+            }
+        }
+
+        #endregion
+
         #region Item Selection
 
         private void treeView_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
