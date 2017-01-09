@@ -95,6 +95,8 @@ namespace PerfmonClient
                 string host = dialog.Host;
                 int port = dialog.Port;
 
+                if (Connections.Any(c => c.Host == host && c.Port == port)) return;
+
                 Connection conn = new Connection(host, port);
                 Connections.Add(conn);
                 conn.Open();
