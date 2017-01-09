@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
@@ -94,6 +95,15 @@ namespace PerfmonServiceLibrary
             #if DEBUG
             Console.WriteLine("Refresh()");
             #endif
+
+            // Force reload of performance counter categories
+            // (Note: Windows 7 reports categories as not existing unless they contain a counter instance)
+            Assembly assembly = typeof(PerformanceCounterCategory).Assembly;
+            Type type = assembly.GetType("System.Diagnostics.PerformanceCounterLib");
+            MethodInfo closeAllTables = type.GetMethod("CloseAllTables", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo closeAllLibraries = type.GetMethod("CloseAllLibraries", BindingFlags.NonPublic | BindingFlags.Static);
+            closeAllTables.Invoke(null, null);
+            closeAllLibraries.Invoke(null, null);
 
             categories.Clear();
         }
