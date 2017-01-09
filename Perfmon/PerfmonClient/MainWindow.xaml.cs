@@ -208,7 +208,7 @@ namespace PerfmonClient
                 tab.Name = dialog.TabName;
 
                 if ((dialog.Rows != tab.Rows || dialog.Columns != tab.Columns) &&
-                    MessageBox.Show(string.Format("Are you sure you want to resize \"{0}\"?", tab.Name), "Edit Tab",
+                    MessageBox.Show(string.Format("Are you sure you want to resize \"{0}\"?\nYou will lose any unsaved changes.", tab.Name), "Edit Tab",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                 {
                     tab.Rows = dialog.Rows;
