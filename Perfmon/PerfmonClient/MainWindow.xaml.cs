@@ -306,6 +306,13 @@ namespace PerfmonClient
             }
         }
 
+        private void TreeViewItem_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // Select items on right click
+            var item = (Item) (sender as TreeViewItem).DataContext;
+            item.IsSelected = true;
+        }
+
         private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
         {
             // Ignore auto-scroll on item selection
