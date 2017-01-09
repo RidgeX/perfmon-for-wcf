@@ -450,16 +450,24 @@ namespace PerfmonClient
         private void refreshMenuItem_Click(object sender, RoutedEventArgs e)
         {
             var machineItem = (MachineItem) (sender as MenuItem).DataContext;
-            Connection conn = Connections.First(c => c.MachineItem == machineItem);
-            conn.Refresh();
+            Connection conn = Connections.FirstOrDefault(c => c.MachineItem == machineItem);
+
+            if (conn != null)
+            {
+                conn.Refresh();
+            }
         }
 
         private void disconnectMenuItem_Click(object sender, RoutedEventArgs e)
         {
             var machineItem = (MachineItem) (sender as MenuItem).DataContext;
-            Connection conn = Connections.First(c => c.MachineItem == machineItem);
-            conn.Close();
-            Connections.Remove(conn);
+            Connection conn = Connections.FirstOrDefault(c => c.MachineItem == machineItem);
+
+            if (conn != null)
+            {
+                conn.Close();
+                Connections.Remove(conn);
+            }
         }
 
         #endregion
