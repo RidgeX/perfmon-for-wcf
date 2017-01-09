@@ -295,32 +295,6 @@ namespace PerfmonClient
 
         #endregion
 
-        #region Show/Hide Chart Tooltips
-
-        private void showTooltipsMenuItem_Checked(object sender, RoutedEventArgs e)
-        {
-            foreach (Tab tab in Tabs)
-            {
-                foreach (ChartItem chartItem in tab.ChartItems)
-                {
-                    chartItem.DataTooltip = new DefaultTooltip();
-                }
-            }
-        }
-
-        private void showTooltipsMenuItem_Unchecked(object sender, RoutedEventArgs e)
-        {
-            foreach (Tab tab in Tabs)
-            {
-                foreach (ChartItem chartItem in tab.ChartItems)
-                {
-                    chartItem.DataTooltip = null;
-                }
-            }
-        }
-
-        #endregion
-
         #region Item Selection
 
         private void treeView_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -415,6 +389,35 @@ namespace PerfmonClient
                 chart.Series.Add(series);
                 AddCounterListener(instanceItem.Path, series);
             }
+        }
+
+        #endregion
+
+        #region Inspect Mode
+
+        private void inspectMenuItem_Checked(object sender, RoutedEventArgs e)
+        {
+            var chart = (CartesianChart) ((sender as MenuItem).Parent as ContextMenu).PlacementTarget;
+            var chartItem = (ChartItem) chart.DataContext;
+
+            chartItem.DataTooltip = new DefaultTooltip();
+
+            Axis axisX = chart.AxisX[0];
+            axisX.SetRange(axisX.MinValue, axisX.MaxValue);
+            chart.Zoom = ZoomingOptions.X;
+        }
+
+        private void inspectMenuItem_Unchecked(object sender, RoutedEventArgs e)
+        {
+            var chart = (CartesianChart) ((sender as MenuItem).Parent as ContextMenu).PlacementTarget;
+            var chartItem = (ChartItem) chart.DataContext;
+
+            chartItem.DataTooltip = null;
+
+            Axis axisX = chart.AxisX[0];
+            chart.Zoom = ZoomingOptions.None;
+            axisX.SetBinding(Axis.MinValueProperty, new Binding("MinX"));
+            axisX.SetBinding(Axis.MaxValueProperty, new Binding("MaxX"));
         }
 
         #endregion

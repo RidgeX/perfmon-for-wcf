@@ -43,8 +43,6 @@
             <MenuItem Header="_View">
                 <MenuItem Header="Show _browser" IsCheckable="True" IsChecked="True"
                           Checked="showBrowserMenuItem_Checked" Unchecked="showBrowserMenuItem_Unchecked" />
-                <MenuItem Header="Show _tooltips" IsCheckable="True" IsChecked="False"
-                          Checked="showTooltipsMenuItem_Checked" Unchecked="showTooltipsMenuItem_Unchecked" />
             </MenuItem>
         </Menu>
         <Grid x:Name="grid" DockPanel.Dock="Left">
@@ -87,6 +85,8 @@
                                                             LegendLocation="Top" Series="{Binding SeriesCollection}">
                                             <lvc:CartesianChart.ContextMenu>
                                                 <ContextMenu>
+                                                    <MenuItem Header="Inspect" IsCheckable="True" IsChecked="False"
+                                                              Checked="inspectMenuItem_Checked" Unchecked="inspectMenuItem_Unchecked" />
                                                     <MenuItem Header="Edit" Click="editChartMenuItem_Click" />
                                                     <MenuItem Header="Remove" Click="removeSeriesMenuItem_Click" />
                                                 </ContextMenu>
