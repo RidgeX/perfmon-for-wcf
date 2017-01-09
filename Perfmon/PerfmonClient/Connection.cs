@@ -13,6 +13,7 @@ namespace PerfmonClient
 {
     public class Connection : IPerfmonCallback
     {
+        private bool hasConnectedOnce;
         private bool ignoreCheckedEvent;
         private DuplexChannelFactory<IPerfmonService> factory;
         private IPerfmonService service;
@@ -27,6 +28,7 @@ namespace PerfmonClient
             Port = port;
             MachineItem = new MachineItem(host, port);
 
+            hasConnectedOnce = false;
             ignoreCheckedEvent = false;
 
             NetTcpBinding binding = new NetTcpBinding();
@@ -158,6 +160,7 @@ namespace PerfmonClient
             try
             {
                 service.Join();
+                hasConnectedOnce = true;
                 PopulateTreeView();
             }
             catch (CommunicationException) { }
@@ -213,7 +216,17 @@ namespace PerfmonClient
 
                 ((IClientChannel) service).Abort();
 
-                if (MessageBox.Show("Lost connection to server. Try reconnecting?", "Performance Monitor",
+                string message;
+                if (hasConnectedOnce)
+                {
+                    message = "Lost connection to {0}:{1}. Try reconnecting?";
+                }
+                else
+                {
+                    message = "Couldn't connect to {0}:{1}. Try reconnecting?";
+                }
+
+                if (MessageBox.Show(string.Format(message, Host, Port), "Performance Monitor",
                     MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
                 {
                     service = factory.CreateChannel();
