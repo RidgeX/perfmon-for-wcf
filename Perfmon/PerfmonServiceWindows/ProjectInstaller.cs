@@ -23,7 +23,7 @@ namespace PerfmonServiceWindows
             process.Account = ServiceAccount.LocalSystem;
 
             service.ServiceName = "PerfmonService";
-            service.DisplayName = "Performance Monitor Service";
+            service.DisplayName = "Performance Monitor for WCF Service";
             service.StartType = ServiceStartMode.Automatic;
 
             base.Installers.Add(process);

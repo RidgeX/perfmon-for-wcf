@@ -139,7 +139,7 @@ namespace PerfmonClient
                     if (!TrySubscribe(counterItem.Parent.Name, counterItem.Name))
                     {
                         MessageBox.Show(string.Format("The following counter no longer exists:\n\\{0}\\{1}",
-                            counterItem.Parent.Name, counterItem.Name), "Performance Monitor",
+                            counterItem.Parent.Name, counterItem.Name), "Performance Monitor for WCF",
                             MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
 
@@ -226,7 +226,7 @@ namespace PerfmonClient
                     message = "Couldn't connect to {0}:{1}. Try reconnecting?";
                 }
 
-                if (MessageBox.Show(string.Format(message, Host, Port), "Performance Monitor",
+                if (MessageBox.Show(string.Format(message, Host, Port), "Performance Monitor for WCF",
                     MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
                 {
                     service = factory.CreateChannel();
