@@ -9,6 +9,7 @@
         xmlns:ui="clr-namespace:PerfmonClient.UI"
         xmlns:conv="clr-namespace:PerfmonClient.UI.Converters"
         mc:Ignorable="d"
+        Icon="Resources/Icon/Client.ico"
         Title="Performance Monitor for WCF" Width="1024" Height="576"
         Closing="Window_Closing">
     <Window.CommandBindings>
