@@ -26,7 +26,7 @@ namespace PerfmonServiceWindows
 
         public static void Main(string[] args)
         {
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            //AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             if (Environment.UserInteractive)
             {
@@ -49,6 +49,7 @@ namespace PerfmonServiceWindows
             }
         }
 
+        /*
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             var ex = (Exception) e.ExceptionObject;
@@ -59,6 +60,7 @@ namespace PerfmonServiceWindows
             }
             catch (Exception) { }
         }
+        */
 
         protected override void OnStart(string[] args)
         {
