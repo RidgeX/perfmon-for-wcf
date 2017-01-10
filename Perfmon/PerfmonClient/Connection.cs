@@ -279,6 +279,7 @@ namespace PerfmonClient
                 {
                     if (!counterItem.InstanceItems.Contains(MainWindow.NoneItem))
                     {
+                        counterItem.InstanceItems.Clear();
                         counterItem.InstanceItems.Add(MainWindow.NoneItem);
                     }
                 }
