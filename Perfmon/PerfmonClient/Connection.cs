@@ -1,4 +1,5 @@
 ﻿using PerfmonClient.Model;
+using PerfmonClient.UI;
 using PerfmonServiceLibrary;
 using System;
 using System.Collections.Generic;
@@ -161,7 +162,11 @@ namespace PerfmonClient
             {
                 service.Join();
                 hasConnectedOnce = true;
-                PopulateTreeView();
+
+                using (new WaitCursor())
+                {
+                    PopulateTreeView();
+                }
             }
             catch (CommunicationException) { }
         }
