@@ -522,7 +522,7 @@ namespace PerfmonClient
 
         public void UpdateSeries(string path, DateTime timestamp, float value)
         {
-            MeasureModel newValue = new MeasureModel(timestamp, value);
+            MeasureModel newValue = new MeasureModel(timestamp, Math.Round(value, 2));
 
             List<Series> listeners;
             if (CounterListeners.TryGetValue(path, out listeners))
