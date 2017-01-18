@@ -20,7 +20,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 using System.Xml.Serialization;
 
@@ -50,6 +49,7 @@ namespace PerfmonClient
 
         public static readonly InstanceItem NoneItem = new InstanceItem("(none)", null);
 
+        public string BasePath { get; set; }
         public ObservableCollection<MachineItem> MachineItems { get; set; }
         public Dictionary<string, List<Series>> CounterListeners { get; set; }
         public ObservableCollection<Tab> Tabs { get; set; }
@@ -64,6 +64,9 @@ namespace PerfmonClient
                 .X(model => model.DateTime.Ticks)
                 .Y(model => model.Value);
             Charting.For<MeasureModel>(mapper);
+
+            BasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "perfmon-for-wcf");
+            if (!Directory.Exists(BasePath)) Directory.CreateDirectory(BasePath);
 
             MachineItems = new ObservableCollection<MachineItem>();
             CounterListeners = new Dictionary<string, List<Series>>();
@@ -135,8 +138,9 @@ namespace PerfmonClient
             if (tab == null) return;
 
             SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.InitialDirectory = BasePath;
             saveFileDialog.FileName = tab.Name;
-            saveFileDialog.Filter = "Tab settings|*.xml";
+            saveFileDialog.Filter = "Tab settings (*.xml)|*.xml";
             saveFileDialog.Title = "Save Tab";
 
             if (saveFileDialog.ShowDialog() == true)
@@ -161,7 +165,8 @@ namespace PerfmonClient
         private void loadTabMenuItem_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "Tab settings|*.xml";
+            openFileDialog.InitialDirectory = BasePath;
+            openFileDialog.Filter = "Tab settings (*.xml)|*.xml";
             openFileDialog.Title = "Load Tab";
 
             if (openFileDialog.ShowDialog() == true)
