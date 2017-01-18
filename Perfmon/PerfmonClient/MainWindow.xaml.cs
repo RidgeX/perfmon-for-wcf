@@ -70,19 +70,10 @@ namespace PerfmonClient
 
             MachineItems = new ObservableCollection<MachineItem>();
             CounterListeners = new Dictionary<string, List<Series>>();
-
             Tabs = new ObservableCollection<Tab>();
-            Tab tab = new Tab("Default", 2, 2);
-            Tabs.Add(tab);
-            tabControl.SelectedItem = tab;
-
             Connections = new List<Connection>();
 
-            /*
-            Connection conn = new Connection("localhost", 8080);
-            Connections.Add(conn);
-            conn.Open();
-            */
+            OpenDefaultTab();
         }
 
         #region Connect To
@@ -189,6 +180,38 @@ namespace PerfmonClient
                     MessageBox.Show(ex.Message, "Load Tab", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
+        }
+
+        private void OpenDefaultTab()
+        {
+            Tab tab = null;
+            string defaultTabFile = Path.Combine(BasePath, "Default.xml");
+
+            if (File.Exists(defaultTabFile))
+            {
+                try
+                {
+                    var fs = new FileStream(defaultTabFile, FileMode.Open);
+
+                    var serial = new XmlSerializer(typeof(Tab));
+                    tab = (Tab) serial.Deserialize(fs);
+
+                    fs.Close();
+                }
+                catch (Exception ex)
+                {
+                    while (ex.InnerException != null) ex = ex.InnerException;
+                    MessageBox.Show(ex.Message, "Load Tab", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+
+            if (tab == null)
+            {
+                tab = new Tab("Default", 2, 2);
+            }
+
+            Tabs.Add(tab);
+            tabControl.SelectedItem = tab;
         }
 
         #endregion
