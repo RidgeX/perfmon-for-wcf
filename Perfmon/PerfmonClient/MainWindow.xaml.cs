@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -50,6 +51,8 @@ namespace PerfmonClient
         public static readonly InstanceItem NoneItem = new InstanceItem("(none)", null);
 
         public string BasePath { get; set; }
+        public Dictionary<string, long> CounterIds { get; set; }
+        public SQLiteConnection Database { get; set; }
         public ObservableCollection<MachineItem> MachineItems { get; set; }
         public Dictionary<string, List<Series>> CounterListeners { get; set; }
         public ObservableCollection<Tab> Tabs { get; set; }
@@ -67,6 +70,9 @@ namespace PerfmonClient
 
             BasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "perfmon-for-wcf");
             if (!Directory.Exists(BasePath)) Directory.CreateDirectory(BasePath);
+
+            CounterIds = new Dictionary<string, long>();
+            InitDatabase();
 
             MachineItems = new ObservableCollection<MachineItem>();
             CounterListeners = new Dictionary<string, List<Series>>();
@@ -550,6 +556,9 @@ namespace PerfmonClient
 
         public void UpdateSeries(string path, DateTime timestamp, float value)
         {
+            long id = GetCounterId(path);
+            UpdateDatabase(id, timestamp, value);
+
             MeasureModel newValue = new MeasureModel(timestamp, Math.Round(value, 2));
 
             List<Series> listeners;
@@ -573,6 +582,57 @@ namespace PerfmonClient
                     }
                 }
             }
+        }
+
+        #endregion
+
+        #region Logging
+
+        private long GetCounterId(string path)
+        {
+            long id;
+            if (!CounterIds.TryGetValue(path, out id))
+            {
+                SQLiteCommand cmd = new SQLiteCommand("SELECT id FROM counter WHERE path = @path", Database);
+                cmd.Parameters.AddWithValue("@path", path);
+                object result = cmd.ExecuteScalar();
+
+                if (result == null)
+                {
+                    cmd = new SQLiteCommand("INSERT INTO counter (path) VALUES (@path)", Database);
+                    cmd.Parameters.AddWithValue("@path", path);
+                    cmd.ExecuteNonQuery();
+                    cmd = new SQLiteCommand("SELECT last_insert_rowid()", Database);
+                    result = cmd.ExecuteScalar();
+                }
+
+                id = (long) result;
+                CounterIds.Add(path, id);
+            }
+
+            return id;
+        }
+
+        private void InitDatabase()
+        {
+            string databaseFile = Path.Combine(BasePath, "Data.sqlite");
+            if (!File.Exists(databaseFile)) SQLiteConnection.CreateFile(databaseFile);
+            Database = new SQLiteConnection(string.Format("Data Source={0};Version=3;", databaseFile));
+            Database.Open();
+
+            SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS counter (id INTEGER, path TEXT, PRIMARY KEY(id))", Database);
+            cmd.ExecuteNonQuery();
+            cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS sample (timestamp DATETIME, counter_id INTEGER, value REAL, PRIMARY KEY(timestamp, counter_id), FOREIGN KEY(counter_id) REFERENCES counter(id))", Database);
+            cmd.ExecuteNonQuery();
+        }
+
+        private void UpdateDatabase(long id, DateTime timestamp, float value)
+        {
+            SQLiteCommand cmd = new SQLiteCommand("INSERT INTO sample VALUES (@timestamp, @counter_id, @value)", Database);
+            cmd.Parameters.AddWithValue("@timestamp", timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+            cmd.Parameters.AddWithValue("@counter_id", id);
+            cmd.Parameters.AddWithValue("@value", value);
+            cmd.ExecuteNonQuery();
         }
 
         #endregion
