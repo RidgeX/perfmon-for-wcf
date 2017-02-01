@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:PerfmonClient"
         mc:Ignorable="d"
         Title="Export Data" Width="300" Height="300" MinWidth="300" MinHeight="300"
-        ResizeMode="NoResize" ShowInTaskbar="False" WindowStartupLocation="CenterOwner">
+        ResizeMode="CanResizeWithGrip" ShowInTaskbar="False" WindowStartupLocation="CenterOwner">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />

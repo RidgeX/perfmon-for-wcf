@@ -64,6 +64,8 @@ namespace PerfmonClient
             DataContext = this;
 
             SavedCounters = new ObservableCollection<SavedCounterItem>();
+            CollectionView view = (CollectionView) CollectionViewSource.GetDefaultView(SavedCounters);
+            view.SortDescriptions.Add(new SortDescription("Path", ListSortDirection.Ascending));
 
             SQLiteCommand cmd = new SQLiteCommand("SELECT * FROM counter", database);
             SQLiteDataReader reader = cmd.ExecuteReader();
