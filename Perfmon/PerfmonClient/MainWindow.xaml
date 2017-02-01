@@ -45,6 +45,9 @@
                 <MenuItem Header="Show _browser" IsCheckable="True" IsChecked="True"
                           Checked="showBrowserMenuItem_Checked" Unchecked="showBrowserMenuItem_Unchecked" />
             </MenuItem>
+            <MenuItem Header="_Tools">
+                <MenuItem Header="_Export data..." Click="exportDataMenuItem_Click" />
+            </MenuItem>
         </Menu>
         <Grid x:Name="grid" DockPanel.Dock="Left">
             <Grid.ColumnDefinitions>

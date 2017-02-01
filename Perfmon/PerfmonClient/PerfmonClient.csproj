@@ -77,6 +77,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ExportDataDialog.xaml.cs">
+      <DependentUpon>ExportDataDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\WaitCursor.cs" />
     <Page Include="ConnectDialog.xaml">
       <SubType>Designer</SubType>
@@ -87,6 +90,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="EditChartDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ExportDataDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

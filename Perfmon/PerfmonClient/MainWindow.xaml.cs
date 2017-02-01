@@ -329,6 +329,41 @@ namespace PerfmonClient
 
         #endregion
 
+        #region Export Data
+
+        private void exportDataMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            ExportDataDialog dialog = new ExportDataDialog(Database);
+            dialog.Owner = this;
+            dialog.ShowDialog();
+
+            if (dialog.DialogResult == true)
+            {
+                SaveFileDialog saveFileDialog = new SaveFileDialog();
+                saveFileDialog.InitialDirectory = BasePath;
+                saveFileDialog.FileName = "export.csv";
+                saveFileDialog.Filter = "Comma separated values (*.csv)|*.csv";
+                saveFileDialog.Title = "Export Data";
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    try
+                    {
+                        var fs = (FileStream) saveFileDialog.OpenFile();
+                        ExportCSVFromDatabase(dialog.SavedCounters, fs);
+                        fs.Close();
+                    }
+                    catch (Exception ex)
+                    {
+                        while (ex.InnerException != null) ex = ex.InnerException;
+                        MessageBox.Show(ex.Message, "Export Data", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
+        }
+
+        #endregion
+
         #region Item Selection
 
         private void treeView_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -615,9 +650,12 @@ namespace PerfmonClient
 
         private void InitDatabase()
         {
-            string databaseFile = Path.Combine(BasePath, "Data.sqlite");
-            if (!File.Exists(databaseFile)) SQLiteConnection.CreateFile(databaseFile);
-            Database = new SQLiteConnection(string.Format("Data Source={0};Version=3;", databaseFile));
+            string dataFolder = Path.Combine(BasePath, "data");
+            if (!Directory.Exists(dataFolder)) Directory.CreateDirectory(dataFolder);
+            string dataFile = Path.Combine(dataFolder, "Data.sqlite3");
+            if (!File.Exists(dataFile)) SQLiteConnection.CreateFile(dataFile);
+
+            Database = new SQLiteConnection(string.Format("Data Source={0};Version=3;", dataFile));
             Database.Open();
 
             SQLiteCommand cmd = new SQLiteCommand("CREATE TABLE IF NOT EXISTS counter (id INTEGER, path TEXT, PRIMARY KEY(id))", Database);
@@ -633,6 +671,90 @@ namespace PerfmonClient
             cmd.Parameters.AddWithValue("@counter_id", id);
             cmd.Parameters.AddWithValue("@value", value);
             cmd.ExecuteNonQuery();
+        }
+
+        private void ExportCSVFromDatabase(ObservableCollection<SavedCounterItem> savedCounters, FileStream fs)
+        {
+            var selectedCounters = savedCounters.Where(item => item.IsChecked == true).ToList();
+            selectedCounters.Sort((a, b) => a.Id.CompareTo(b.Id));
+            StreamWriter writer = new StreamWriter(fs);
+
+            /*
+             * SQL format (after table join)
+             * -------------------------------------------
+             * | timestamp               | id | value    |
+             * |-------------------------|----|----------|
+             * | 2017-01-10 16:49:51.250 | 1  | 13.70664 |
+             * | 2017-01-10 16:49:51.250 | 2  | NULL     |
+             * | 2017-01-10 16:49:51.500 | 1  | NULL     |
+             * | 2017-01-10 16:49:51.500 | 2  | 4.292823 |
+             * | 2017-01-10 16:49:52.250 | 1  | 23.58469 |
+             * | 2017-01-10 16:49:52.250 | 2  | NULL     |
+             * | 2017-01-10 16:49:52.500 | 1  | NULL     |
+             * | 2017-01-10 16:49:52.500 | 2  | 1.751746 |
+             * -------------------------------------------
+             *
+             * CSV format
+             * "(PDH-CSV 4.0) (UTC)(0)","\\RWAP1443\Processor(0)\% Processor Time","\\RWAP1443\Processor(1)\% Processor Time"
+             * "2017-01-10 16:49:51.250","13.70664","0"
+             * "2017-01-10 16:49:51.500","13.70664","4.292823"
+             * "2017-01-10 16:49:52.250","23.58469","4.292823"
+             * "2017-01-10 16:49:52.500","23.58469","1.751746"
+             *
+             * BLG format
+             * relog -f bin export.csv -o export.blg
+             */
+            SQLiteCommand cmd = new SQLiteCommand("CREATE TEMPORARY TABLE temp (id INTEGER)", Database);
+            cmd.ExecuteNonQuery();
+
+            writer.Write("\"(PDH-CSV 4.0) (UTC)(0)\"");
+            SQLiteTransaction transaction = Database.BeginTransaction();
+            foreach (SavedCounterItem item in selectedCounters)
+            {
+                cmd = new SQLiteCommand("INSERT INTO temp VALUES (@id)", Database);
+                cmd.Parameters.AddWithValue("@id", item.Id);
+                cmd.ExecuteNonQuery();
+                writer.Write(",\"{0}\"", item.Path);
+            }
+            transaction.Commit();
+
+            string lastTimestamp = string.Empty;
+            double[] lastValue = new double[selectedCounters.Count];
+            string sql = string.Join(
+                Environment.NewLine,
+                "SELECT strftime('%m/%d/%Y %H:%M:%f', s.timestamp), t.value FROM counter",
+                "CROSS JOIN (SELECT DISTINCT timestamp FROM sample) AS s",
+                "LEFT JOIN sample AS t ON s.timestamp = t.timestamp AND id = t.counter_id",
+                "WHERE id IN temp",
+                "ORDER BY s.timestamp, id"
+            );
+            cmd = new SQLiteCommand(sql, Database);
+            SQLiteDataReader reader = cmd.ExecuteReader();
+
+            int i = 0;
+            while (reader.Read())
+            {
+                string timestamp = (string) reader[0];
+
+                if (timestamp != lastTimestamp)
+                {
+                    writer.WriteLine();
+                    writer.Write("\"{0}\"", timestamp);
+                    lastTimestamp = timestamp;
+                    i = 0;
+                }
+
+                double value = (reader[1] != DBNull.Value ? (double) reader[1] : lastValue[i]);
+                writer.Write(",\"{0}\"", value);
+                lastValue[i] = value;
+                i++;
+            }
+
+            cmd = new SQLiteCommand("DROP TABLE temp", Database);
+            cmd.ExecuteNonQuery();
+
+            writer.WriteLine();
+            writer.Flush();
         }
 
         #endregion
