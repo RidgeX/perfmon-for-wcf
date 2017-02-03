@@ -71,7 +71,7 @@ namespace PerfmonServiceHost
                 selfHost.Open();
 
                 var timer = new System.Timers.Timer();
-                timer.Interval = 1000;
+                timer.Interval = 5000;
                 timer.Elapsed += (s, e) => service.Update();
                 timer.Start();
 

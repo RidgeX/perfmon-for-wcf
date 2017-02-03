@@ -96,7 +96,7 @@ namespace PerfmonClient.Model
             DateTimeFormatter = ticks =>
                 (ticks >= DateTime.MinValue.Ticks && ticks <= DateTime.MaxValue.Ticks) ?
                 new DateTime((long) ticks).ToString("mm:ss") : string.Empty;
-            AxisStep = TimeSpan.FromSeconds(1).Ticks;
+            AxisStep = TimeSpan.FromSeconds(5).Ticks;
             MaxX = MinX = MaxY = double.NaN;
             MinY = 0;
             DataTooltip = null;
@@ -123,8 +123,8 @@ namespace PerfmonClient.Model
 
         public void SetAxisLimits(DateTime timestamp)
         {
-            MaxX = timestamp.Ticks + TimeSpan.FromSeconds(1).Ticks;
-            MinX = timestamp.Ticks - TimeSpan.FromSeconds(8).Ticks;
+            MaxX = timestamp.Ticks + TimeSpan.FromSeconds(5).Ticks;
+            MinX = timestamp.Ticks - TimeSpan.FromSeconds(40).Ticks;
         }
 
         #region Serialization
