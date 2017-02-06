@@ -58,7 +58,7 @@
       <!-- PerfmonServiceWindows -->
       <Component Id="PerfmonServiceWindows.exe" Guid="{992A0F99-EF21-4503-87BA-346298E384AC}">
         <File Id="PerfmonServiceWindows.exe" Source="$(var.PerfmonServiceWindows.TargetDir)\PerfmonServiceWindows.exe" KeyPath="yes" Checksum="yes" />
-        <ServiceInstall Type="ownProcess" Start="auto" ErrorControl="normal" Vital="yes"
+        <ServiceInstall Type="ownProcess" Start="demand" ErrorControl="normal" Vital="yes"
                         Name="PerfmonService" DisplayName="Performance Monitor for WCF Service" />
         <ServiceControl Id="RemoveService" Name="PerfmonService" Remove="uninstall" Stop="both" Wait="yes" />
       </Component>

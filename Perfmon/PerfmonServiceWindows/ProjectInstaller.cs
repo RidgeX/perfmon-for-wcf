@@ -24,7 +24,7 @@ namespace PerfmonServiceWindows
 
             service.ServiceName = "PerfmonService";
             service.DisplayName = "Performance Monitor for WCF Service";
-            service.StartType = ServiceStartMode.Automatic;
+            service.StartType = ServiceStartMode.Manual;
 
             base.Installers.Add(process);
             base.Installers.Add(service);
