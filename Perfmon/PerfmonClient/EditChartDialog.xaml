@@ -33,6 +33,7 @@
                                          Text="{Binding Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                          VerticalAlignment="Center" />
                                 <xctk:ColorPicker Grid.Column="1"
+                                                  Foreground="Black"
                                                   ShowAdvancedButton="False"
                                                   ShowAvailableColors="False"
                                                   StandardColors="{Binding MaterialColors, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:EditChartDialog}}}"
