@@ -298,6 +298,8 @@ namespace PerfmonClient
                 conn.Close();
                 Connections.Remove(conn);
             }
+
+            Database.Close();
         }
 
         #endregion
@@ -339,9 +341,12 @@ namespace PerfmonClient
 
             if (dialog.DialogResult == true)
             {
+                DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                long unixTime = Convert.ToInt64((DateTime.Now - epoch).TotalSeconds);
+
                 SaveFileDialog saveFileDialog = new SaveFileDialog();
                 saveFileDialog.InitialDirectory = BasePath;
-                saveFileDialog.FileName = "export.csv";
+                saveFileDialog.FileName = string.Format("export_{0}.csv", unixTime);
                 saveFileDialog.Filter = "Comma separated values (*.csv)|*.csv";
                 saveFileDialog.Title = "Export Data";
 
