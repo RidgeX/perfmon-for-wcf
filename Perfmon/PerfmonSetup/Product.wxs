@@ -15,7 +15,10 @@
   <Fragment>
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFilesFolder">
-        <Directory Id="INSTALLFOLDER" Name="perfmon-for-wcf" />
+        <Directory Id="INSTALLFOLDER" Name="perfmon-for-wcf">
+          <Directory Id="x64Folder" Name="x64" />
+          <Directory Id="x86Folder" Name="x86" />
+        </Directory>
       </Directory>
       <Directory Id="ProgramMenuFolder">
         <Directory Id="ApplicationProgramsFolder" Name="Performance Monitor for WCF" />
@@ -24,45 +27,54 @@
   </Fragment>
 
   <Fragment>
-    <ComponentGroup Id="ApplicationFiles" Directory="INSTALLFOLDER">
+    <ComponentGroup Id="ApplicationFiles">
       <!-- PerfmonClient -->
-      <Component Id="LiveCharts.dll" Guid="{C949D6B4-A85B-47FC-969A-8BDAD94FF504}">
+      <Component Id="SQLite.Interop.x64.dll" Directory="x64Folder" Guid="{F42348EB-0D9B-4578-BDA1-FC0ADA0E566C}">
+        <File Id="SQLite.Interop.x64.dll" Source="$(var.PerfmonClient.TargetDir)\x64\SQLite.Interop.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="SQLite.Interop.x86.dll" Directory="x86Folder" Guid="{D2D2E37A-3F57-4752-A044-C2FE7612150F}">
+        <File Id="SQLite.Interop.x86.dll" Source="$(var.PerfmonClient.TargetDir)\x86\SQLite.Interop.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="LiveCharts.dll" Directory="INSTALLFOLDER" Guid="{C949D6B4-A85B-47FC-969A-8BDAD94FF504}">
         <File Id="LiveCharts.dll" Source="$(var.PerfmonClient.TargetDir)\LiveCharts.dll" KeyPath="yes" />
       </Component>
-      <Component Id="LiveCharts.Wpf.dll" Guid="{3308CF8F-E28F-4A04-8384-72C5C04C0814}">
+      <Component Id="LiveCharts.Wpf.dll" Directory="INSTALLFOLDER" Guid="{3308CF8F-E28F-4A04-8384-72C5C04C0814}">
         <File Id="LiveCharts.Wpf.dll" Source="$(var.PerfmonClient.TargetDir)\LiveCharts.Wpf.dll" KeyPath="yes" />
       </Component>
-      <Component Id="PerfmonClient.exe" Guid="{2E08F267-BD9E-4AFA-8A5C-7CBBC2105844}">
+      <Component Id="PerfmonClient.exe" Directory="INSTALLFOLDER" Guid="{2E08F267-BD9E-4AFA-8A5C-7CBBC2105844}">
         <File Id="PerfmonClient.exe" Source="$(var.PerfmonClient.TargetDir)\PerfmonClient.exe" KeyPath="yes" Checksum="yes" />
       </Component>
-      <Component Id="PerfmonClient.exe.config" Guid="{E3799305-3098-4380-8B16-FF5CD4F25D5C}">
+      <Component Id="PerfmonClient.exe.config" Directory="INSTALLFOLDER" Guid="{E3799305-3098-4380-8B16-FF5CD4F25D5C}">
         <File Id="PerfmonClient.exe.config" Source="$(var.PerfmonClient.TargetDir)\PerfmonClient.exe.config" KeyPath="yes" />
       </Component>
-      <Component Id="Xceed.Wpf.Toolkit.dll" Guid="{7B641EC1-FAC0-4068-990A-B3D8494F3840}">
+      <Component Id="System.Data.SQLite.dll" Directory="INSTALLFOLDER" Guid="{06817277-6723-4192-BF90-522AB4448AF5}">
+        <File Id="System.Data.SQLite.dll" Source="$(var.PerfmonClient.TargetDir)\System.Data.SQLite.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="Xceed.Wpf.Toolkit.dll" Directory="INSTALLFOLDER" Guid="{7B641EC1-FAC0-4068-990A-B3D8494F3840}">
         <File Id="Xceed.Wpf.Toolkit.dll" Source="$(var.PerfmonClient.TargetDir)\Xceed.Wpf.Toolkit.dll" KeyPath="yes" />
       </Component>
 
       <!-- PerfmonServiceHost -->
-      <Component Id="PerfmonServiceHost.exe" Guid="{F12F5612-0FD2-4583-8EF5-118BDAF16507}">
+      <Component Id="PerfmonServiceHost.exe" Directory="INSTALLFOLDER" Guid="{F12F5612-0FD2-4583-8EF5-118BDAF16507}">
         <File Id="PerfmonServiceHost.exe" Source="$(var.PerfmonServiceHost.TargetDir)\PerfmonServiceHost.exe" KeyPath="yes" Checksum="yes" />
       </Component>
-      <Component Id="PerfmonServiceHost.exe.config" Guid="{E65DDB3B-323E-4B5C-AA66-53BEC873E201}">
+      <Component Id="PerfmonServiceHost.exe.config" Directory="INSTALLFOLDER" Guid="{E65DDB3B-323E-4B5C-AA66-53BEC873E201}">
         <File Id="PerfmonServiceHost.exe.config" Source="$(var.PerfmonServiceHost.TargetDir)\PerfmonServiceHost.exe.config" KeyPath="yes" />
       </Component>
 
       <!-- PerfmonServiceLibrary -->
-      <Component Id="PerfmonServiceLibrary.dll" Guid="{5E6A3B9A-BB7A-4CB6-BEA9-4AE860F4413B}">
+      <Component Id="PerfmonServiceLibrary.dll" Directory="INSTALLFOLDER" Guid="{5E6A3B9A-BB7A-4CB6-BEA9-4AE860F4413B}">
         <File Id="PerfmonServiceLibrary.dll" Source="$(var.PerfmonServiceLibrary.TargetDir)\PerfmonServiceLibrary.dll" KeyPath="yes" />
       </Component>
 
       <!-- PerfmonServiceWindows -->
-      <Component Id="PerfmonServiceWindows.exe" Guid="{992A0F99-EF21-4503-87BA-346298E384AC}">
+      <Component Id="PerfmonServiceWindows.exe" Directory="INSTALLFOLDER" Guid="{992A0F99-EF21-4503-87BA-346298E384AC}">
         <File Id="PerfmonServiceWindows.exe" Source="$(var.PerfmonServiceWindows.TargetDir)\PerfmonServiceWindows.exe" KeyPath="yes" Checksum="yes" />
         <ServiceInstall Type="ownProcess" Start="demand" ErrorControl="normal" Vital="yes"
                         Name="PerfmonService" DisplayName="Performance Monitor for WCF Service" />
         <ServiceControl Id="RemoveService" Name="PerfmonService" Remove="uninstall" Stop="both" Wait="yes" />
       </Component>
-      <Component Id="PerfmonServiceWindows.exe.config" Guid="{77767A5C-B14E-46DB-B7C6-72CEE3CCD779}">
+      <Component Id="PerfmonServiceWindows.exe.config" Directory="INSTALLFOLDER" Guid="{77767A5C-B14E-46DB-B7C6-72CEE3CCD779}">
         <File Id="PerfmonServiceWindows.exe.config" Source="$(var.PerfmonServiceWindows.TargetDir)\PerfmonServiceWindows.exe.config" KeyPath="yes" />
       </Component>
     </ComponentGroup>
